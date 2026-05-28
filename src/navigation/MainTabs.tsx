@@ -2,9 +2,7 @@ import React from 'react';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
-
-// 👇 We'll create these screens next
-import ShiftsScreen from '../screens/shifts/ShiftsScreen';
+import ShiftsStack from './ShiftsStack';
 import ApplicationsScreen from '../screens/applications/ApplicationsScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import EarningsScreen from '../screens/earnings/EarningsScreen';
@@ -47,16 +45,12 @@ const MainTabs = () => {
             Profile: focused ? 'person' : 'person-outline',
           };
           return (
-            <Ionicons
-              name={icons[route.name]}
-              size={size}
-              color={color}
-            />
+            <Ionicons name={icons[route.name]} size={size} color={color} />
           );
         },
       })}
     >
-      <Tab.Screen name="Shifts" component={ShiftsScreen} />
+      <Tab.Screen name="Shifts" component={ShiftsStack} />
       <Tab.Screen name="Applications" component={ApplicationsScreen} />
       <Tab.Screen name="Notifications" component={NotificationsScreen} />
       <Tab.Screen name="Earnings" component={EarningsScreen} />

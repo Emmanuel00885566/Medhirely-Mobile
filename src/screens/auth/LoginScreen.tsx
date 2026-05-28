@@ -11,9 +11,12 @@ import {
   ScrollView,
   Alert,
   Dimensions,
+  Image,
 } from 'react-native';
+
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
+
 import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
@@ -27,19 +30,23 @@ const { width } = Dimensions.get('window');
 
 const LoginScreen = ({ navigation }: Props) => {
   const { login } = useAuth();
-  const [email, setEmail] = useState('');
+
+  const [emailOrName, setEmailOrName] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
+    if (!emailOrName || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
+
     setIsLoading(true);
+
     try {
-      await login(email, password);
+      await login(emailOrName, password);
     } catch (error) {
       Alert.alert('Login Failed', 'Invalid email or password');
     } finally {
@@ -57,37 +64,30 @@ const LoginScreen = ({ navigation }: Props) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
-        {/* Top blue header curve */}
-        <View style={styles.header}>
+        {/* Logo */}
+        <View style={styles.logoSection}>
           <View style={styles.logoContainer}>
-            <Ionicons name="medical" size={36} color={colors.white} />
+            <Image
+              source={require('../../assets/mdi_heart.png')}
+              style={styles.logoImage}
+              resizeMode="contain"
+            />
           </View>
-          <Text style={styles.brandName}>MedHirely</Text>
-          <Text style={styles.tagline}>Healthcare shifts, simplified.</Text>
         </View>
 
-        {/* White form area */}
-        <View style={styles.form}>
-          <Text style={styles.formTitle}>Welcome back 👋</Text>
-          <Text style={styles.formSubtitle}>Sign in to your account</Text>
-
-          {/* Email */}
+        {/* Form Card */}
+        <View style={styles.card}>
+          {/* Full Name / Email */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
+            <Text style={styles.label}>Full name / Email</Text>
+
             <View style={styles.inputWrapper}>
-              <Ionicons
-                name="mail-outline"
-                size={18}
-                color={colors.textMuted}
-                style={styles.inputIcon}
-              />
               <TextInput
                 style={styles.input}
-                placeholder="Enter your email"
+                placeholder="Enter your name or email"
                 placeholderTextColor={colors.textMuted}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
+                value={emailOrName}
+                onChangeText={setEmailOrName}
                 autoCapitalize="none"
               />
             </View>
@@ -96,13 +96,8 @@ const LoginScreen = ({ navigation }: Props) => {
           {/* Password */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Password</Text>
+
             <View style={styles.inputWrapper}>
-              <Ionicons
-                name="lock-closed-outline"
-                size={18}
-                color={colors.textMuted}
-                style={styles.inputIcon}
-              />
               <TextInput
                 style={styles.input}
                 placeholder="Enter your password"
@@ -111,30 +106,59 @@ const LoginScreen = ({ navigation }: Props) => {
                 onChangeText={setPassword}
                 secureTextEntry={!showPassword}
               />
+
               <TouchableOpacity
                 onPress={() => setShowPassword(!showPassword)}
                 hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
               >
                 <Ionicons
                   name={showPassword ? 'eye-off-outline' : 'eye-outline'}
-                  size={18}
+                  size={20}
                   color={colors.textMuted}
                 />
               </TouchableOpacity>
             </View>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('ForgotPassword')}
+              style={styles.forgotPassword}
+            >
+              <Text style={styles.forgotPasswordText}>
+                Forgot Password?
+              </Text>
+            </TouchableOpacity>
           </View>
 
-          {/* Forgot Password */}
+          {/* Remember Me */}
           <TouchableOpacity
-            onPress={() => navigation.navigate('ForgotPassword')}
-            style={styles.forgotPassword}
+            style={styles.rememberRow}
+            onPress={() => setRememberMe(!rememberMe)}
+            activeOpacity={0.7}
           >
-            <Text style={styles.forgotPasswordText}>Forgot Password?</Text>
+            <View
+              style={[
+                styles.checkbox,
+                rememberMe && styles.checkboxActive,
+              ]}
+            >
+              {rememberMe && (
+                <Ionicons
+                  name="checkmark"
+                  size={12}
+                  color={colors.white}
+                />
+              )}
+            </View>
+
+            <Text style={styles.rememberText}>Remember me</Text>
           </TouchableOpacity>
 
           {/* Login Button */}
           <TouchableOpacity
-            style={[styles.loginButton, isLoading && styles.buttonDisabled]}
+            style={[
+              styles.loginButton,
+              isLoading && styles.buttonDisabled,
+            ]}
             onPress={handleLogin}
             disabled={isLoading}
             activeOpacity={0.85}
@@ -142,30 +166,18 @@ const LoginScreen = ({ navigation }: Props) => {
             {isLoading ? (
               <ActivityIndicator color={colors.white} />
             ) : (
-              <Text style={styles.loginButtonText}>Sign In</Text>
+              <Text style={styles.loginButtonText}>Log In</Text>
             )}
           </TouchableOpacity>
 
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerText}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Signup Link */}
-          <TouchableOpacity
-            style={styles.signupButton}
-            onPress={() => navigation.navigate('Signup')}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.signupButtonText}>Create an Account</Text>
-          </TouchableOpacity>
-
+          {/* Signup */}
           <View style={styles.signupRow}>
-            <Text style={styles.signupText}>Already have an account? </Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.signupLink}>Sign In</Text>
+            <Text style={styles.signupText}>No account? </Text>
+
+            <TouchableOpacity
+              onPress={() => navigation.navigate('Signup')}
+            >
+              <Text style={styles.signupLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -178,154 +190,149 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: colors.background,
-  },
-  header: {
-    backgroundColor: colors.primary,
-    paddingTop: 70,
-    paddingBottom: 48,
     alignItems: 'center',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingBottom: 40,
   },
+
+  logoSection: {
+    alignItems: 'center',
+    paddingTop: 80,
+    paddingBottom: 32,
+  },
+
   logoContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    width: 100,
+    height: 100,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
   },
-  brandName: {
-    fontSize: typography.xxl,
-    fontWeight: typography.bold,
-    color: colors.white,
-    letterSpacing: 1,
+
+  logoImage: {
+    width: 80,
+    height: 80,
   },
-  tagline: {
-    fontSize: typography.sm,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 4,
+
+  card: {
+    width: width - 48,
+    backgroundColor: colors.white,
+    borderRadius: 20,
+    padding: 24,
+
+    shadowColor: colors.black,
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+
+    shadowOpacity: 0.08,
+    shadowRadius: 16,
+    elevation: 4,
   },
-  form: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 40,
-    backgroundColor: colors.background,
-  },
-  formTitle: {
-    fontSize: typography.xl,
-    fontWeight: typography.bold,
-    color: colors.textPrimary,
-    marginBottom: 4,
-  },
-  formSubtitle: {
-    fontSize: typography.md,
-    color: colors.textSecondary,
-    marginBottom: 28,
-  },
+
   inputGroup: {
     marginBottom: 16,
   },
+
   label: {
     fontSize: typography.sm,
     fontWeight: typography.medium,
     color: colors.textPrimary,
     marginBottom: 8,
   },
+
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.inputBackground,
-    borderRadius: 12,
-    borderWidth: 1,
-    borderColor: colors.border,
-    paddingHorizontal: 14,
-    height: 52,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.border,
+    paddingBottom: 8,
   },
-  inputIcon: {
-    marginRight: 10,
-  },
+
   input: {
     flex: 1,
     fontSize: typography.md,
     color: colors.textPrimary,
+    paddingVertical: 4,
   },
+
   forgotPassword: {
     alignSelf: 'flex-end',
-    marginBottom: 24,
-    marginTop: 4,
+    marginTop: 6,
   },
+
   forgotPasswordText: {
     fontSize: typography.sm,
-    color: colors.primary,
-    fontWeight: typography.medium,
+    color: colors.textSecondary,
   },
+
+  rememberRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderRadius: 4,
+    borderWidth: 2,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: 10,
+  },
+
+  checkboxActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+
+  rememberText: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+  },
+
   loginButton: {
     backgroundColor: colors.primary,
     borderRadius: 12,
-    height: 54,
+    height: 52,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 20,
+
     shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
+    shadowOffset: {
+      width: 0,
+      height: 4,
+    },
+
     shadowOpacity: 0.3,
     shadowRadius: 8,
     elevation: 4,
   },
+
   buttonDisabled: {
     opacity: 0.7,
   },
+
   loginButtonText: {
     fontSize: typography.md,
     fontWeight: typography.bold,
     color: colors.white,
     letterSpacing: 0.5,
   },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 20,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-    backgroundColor: colors.border,
-  },
-  dividerText: {
-    fontSize: typography.sm,
-    color: colors.textMuted,
-    marginHorizontal: 12,
-  },
-  signupButton: {
-    backgroundColor: colors.white,
-    borderRadius: 12,
-    height: 54,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 24,
-    borderWidth: 1.5,
-    borderColor: colors.primary,
-  },
-  signupButtonText: {
-    fontSize: typography.md,
-    fontWeight: typography.bold,
-    color: colors.primary,
-    letterSpacing: 0.5,
-  },
+
   signupRow: {
     flexDirection: 'row',
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   signupText: {
     fontSize: typography.sm,
     color: colors.textSecondary,
   },
+
   signupLink: {
     fontSize: typography.sm,
     color: colors.primary,

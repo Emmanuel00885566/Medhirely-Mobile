@@ -17,7 +17,7 @@ export const colors = {
   // Neutrals
   white: '#FFFFFF',
   black: '#000000',
-  background: '#FFFFFF',       // ✅ White background
+  background: '#EEF2FF',       // ✅ White background
   card: '#FFFFFF',
 
   // Text
