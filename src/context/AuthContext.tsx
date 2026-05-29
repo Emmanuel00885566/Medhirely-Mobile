@@ -21,6 +21,7 @@ type AuthContextType = {
   logout: () => Promise<void>;
   completeOnboarding: () => void;
   setUserVerified: () => void;
+  updateUser: (updates: Partial<User>) => void;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -78,6 +79,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const setUserVerified = () => {
     if (user) setUser({ ...user, verified: true });
   };
+  const updateUser = (updates: Partial<User>) => {
+  if (user) setUser({ ...user, ...updates });
+};
 
   return (
     <AuthContext.Provider
@@ -92,6 +96,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         logout,
         completeOnboarding,
         setUserVerified,
+        updateUser,
       }}
     >
       {children}

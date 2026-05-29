@@ -3,10 +3,10 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../theme/colors';
 import ShiftsStack from './ShiftsStack';
-import ApplicationsScreen from '../screens/applications/ApplicationsScreen';
+import ApplicationsStack from './ApplicationsStack';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
-import EarningsScreen from '../screens/earnings/EarningsScreen';
-import ProfileScreen from '../screens/profile/ProfileScreen';
+import EarningsStack from './EarningsStack';
+import ProfileStack from './ProfileStack';
 
 export type MainTabParamList = {
   Shifts: undefined;
@@ -51,10 +51,10 @@ const MainTabs = () => {
       })}
     >
       <Tab.Screen name="Shifts" component={ShiftsStack} />
-      <Tab.Screen name="Applications" component={ApplicationsScreen} />
+      <Tab.Screen name="Applications" component={ApplicationsStack} />
       <Tab.Screen name="Notifications" component={NotificationsScreen} />
-      <Tab.Screen name="Earnings" component={EarningsScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
+      <Tab.Screen name="Earnings" component={EarningsStack} />
+      <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
   );
 };
