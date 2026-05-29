@@ -71,7 +71,10 @@ const SignupScreen = ({ navigation }: Props) => {
     setIsLoading(true);
 
     try {
-      await signup(fullName, email, password);
+      // Simulate sending OTP to email
+      await new Promise((res) => setTimeout(res, 1000));
+      // Navigate to OTP screen with email
+      navigation.navigate('OTPVerification', { email });
     } catch (error) {
       Alert.alert(
         'Signup Failed',
