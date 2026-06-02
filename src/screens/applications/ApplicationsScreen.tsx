@@ -77,118 +77,115 @@ const ApplicationsScreen = () => {
     }
   };
 
-  const getStatusColor = (status: string) => {
+  const getStatusConfig = (status: string) => {
     switch (status) {
-      case 'pending': return colors.warning;
-      case 'accepted': return colors.success;
-      case 'completed': return colors.primary;
-      case 'rejected': return colors.error;
-      default: return colors.textMuted;
+      case 'pending':
+        return { color: colors.warning, bg: '#FFF3E0', label: 'PENDING' };
+      case 'accepted':
+        return { color: colors.success, bg: colors.secondaryLight, label: 'ACCEPTED' };
+      case 'completed':
+        return { color: colors.primary, bg: colors.primaryLight, label: 'COMPLETED' };
+      case 'rejected':
+        return { color: colors.error, bg: '#FFF0F0', label: 'REJECTED' };
+      default:
+        return { color: colors.textMuted, bg: colors.borderLight, label: status.toUpperCase() };
     }
   };
 
-  const getStatusBg = (status: string) => {
-    switch (status) {
-      case 'pending': return '#FFF3E0';
-      case 'accepted': return colors.secondaryLight;
-      case 'completed': return colors.primaryLight;
-      case 'rejected': return '#FFF0F0';
-      default: return colors.borderLight;
-    }
+  const formatTimeAgo = (dateString: string) => {
+    const date = new Date(dateString);
+    const now = new Date();
+    const diff = now.getTime() - date.getTime();
+    const hours = Math.floor(diff / (1000 * 60 * 60));
+    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+    if (days > 0) return `Applied ${days}d ago`;
+    if (hours > 0) return `Applied ${hours}h ago`;
+    return 'Applied just now';
   };
 
-  const renderApplicationCard = ({ item }: { item: any }) => (
-    <View style={styles.card}>
-      {/* Card Header */}
-      <View style={styles.cardHeader}>
-        <View style={styles.facilityIconContainer}>
-          <Ionicons name="business-outline" size={22} color={colors.primary} />
+  const renderApplicationCard = ({ item }: { item: any }) => {
+    const config = getStatusConfig(item.status);
+    return (
+      <TouchableOpacity
+        style={styles.card}
+        onPress={() => {
+          if (activeTab === 'Accepted') {
+            navigation.navigate('UpcomingShiftDetail', { applicationId: item.id });
+          } else if (activeTab === 'Completed') {
+            navigation.navigate('ShiftSummary', { applicationId: item.id });
+          }
+        }}
+        activeOpacity={0.85}
+      >
+        {/* Card Header */}
+        <View style={styles.cardHeader}>
+          <View style={styles.facilityIconContainer}>
+            <Ionicons name="add" size={20} color={colors.white} />
+          </View>
+          <View style={styles.cardHeaderText}>
+            <View style={styles.titleRow}>
+              <Text style={styles.facilityName} numberOfLines={1}>
+                {item.shift.facility}
+              </Text>
+              <View style={[styles.statusBadge, { backgroundColor: config.bg }]}>
+                <Text style={[styles.statusText, { color: config.color }]}>
+                  {config.label}
+                </Text>
+              </View>
+            </View>
+            <Text style={styles.roleText}>{item.shift.title}</Text>
+          </View>
         </View>
-        <View style={styles.cardHeaderText}>
-          <Text style={styles.shiftTitle} numberOfLines={1}>
-            {item.shift.title}
-          </Text>
-          <Text style={styles.facilityName} numberOfLines={1}>
-            {item.shift.facility}
-          </Text>
+
+        {/* Shift Info */}
+        <View style={styles.shiftInfo}>
+          <View style={styles.infoItem}>
+            <Ionicons name="calendar-outline" size={14} color={colors.textMuted} />
+            <Text style={styles.infoText}>{item.shift.date}</Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Ionicons name="time-outline" size={14} color={colors.textMuted} />
+            <Text style={styles.infoText}>
+              {item.shift.startTime} - {item.shift.endTime}
+            </Text>
+          </View>
+          <View style={styles.infoItem}>
+            <Ionicons name="location-outline" size={14} color={colors.textMuted} />
+            <Text style={styles.infoText}>{item.shift.location}</Text>
+          </View>
         </View>
-        <View style={[styles.statusBadge, { backgroundColor: getStatusBg(item.status) }]}>
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-            {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
-          </Text>
+
+        {/* Footer */}
+        <View style={styles.cardFooter}>
+          <Text style={styles.timeAgoText}>{formatTimeAgo(item.appliedAt)}</Text>
+
+          {activeTab === 'Pending' && (
+            <TouchableOpacity
+              style={styles.withdrawButton}
+              onPress={() => {
+                setSelectedApp(item);
+                setWithdrawModal(true);
+              }}
+            >
+              <Text style={styles.withdrawButtonText}>Withdraw</Text>
+            </TouchableOpacity>
+          )}
+
+          {activeTab === 'Accepted' && (
+            <View style={styles.chevronContainer}>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </View>
+          )}
+
+          {activeTab === 'Completed' && (
+            <View style={styles.chevronContainer}>
+              <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+            </View>
+          )}
         </View>
-      </View>
-
-      {/* Divider */}
-      <View style={styles.cardDivider} />
-
-      {/* Card Details */}
-      <View style={styles.cardDetails}>
-        <View style={styles.detailItem}>
-          <Ionicons name="location-outline" size={14} color={colors.textMuted} />
-          <Text style={styles.detailText} numberOfLines={1}>
-            {item.shift.location}
-          </Text>
-        </View>
-        <View style={styles.detailItem}>
-          <Ionicons name="calendar-outline" size={14} color={colors.textMuted} />
-          <Text style={styles.detailText}>{item.shift.date}</Text>
-        </View>
-      </View>
-
-      <View style={styles.cardDetails}>
-        <View style={styles.detailItem}>
-          <Ionicons name="time-outline" size={14} color={colors.textMuted} />
-          <Text style={styles.detailText}>
-            {item.shift.startTime} - {item.shift.endTime}
-          </Text>
-        </View>
-        <Text style={styles.payText}>₦{item.shift.pay.toLocaleString()}</Text>
-      </View>
-
-      {/* Action Buttons */}
-      <View style={styles.cardActions}>
-        {/* Pending Tab Actions */}
-        {activeTab === 'Pending' && (
-          <TouchableOpacity
-            style={styles.withdrawButton}
-            onPress={() => {
-              setSelectedApp(item);
-              setWithdrawModal(true);
-            }}
-            activeOpacity={0.85}
-          >
-            <Ionicons name="close-circle-outline" size={16} color={colors.error} />
-            <Text style={styles.withdrawButtonText}>Withdraw</Text>
-          </TouchableOpacity>
-        )}
-
-        {/* Accepted Tab Actions */}
-        {activeTab === 'Accepted' && (
-          <TouchableOpacity
-            style={styles.viewButton}
-            onPress={() => navigation.navigate('UpcomingShiftDetail', { applicationId: item.id })}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.viewButtonText}>View Shift Details</Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.white} />
-          </TouchableOpacity>
-        )}
-
-        {/* Completed Tab Actions */}
-        {activeTab === 'Completed' && (
-          <TouchableOpacity
-            style={styles.viewButton}
-            onPress={() => navigation.navigate('ShiftSummary', { applicationId: item.id })}
-            activeOpacity={0.85}
-          >
-            <Text style={styles.viewButtonText}>View Summary</Text>
-            <Ionicons name="arrow-forward" size={16} color={colors.white} />
-          </TouchableOpacity>
-        )}
-      </View>
-    </View>
-  );
+      </TouchableOpacity>
+    );
+  };
 
   const renderEmpty = () => (
     <View style={styles.emptyContainer}>
@@ -208,8 +205,11 @@ const ApplicationsScreen = () => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>My Applications</Text>
-        <Text style={styles.headerSubtitle}>Track all your shift applications</Text>
+        <Text style={styles.headerTitle}>Applications</Text>
+        <TouchableOpacity style={styles.bellButton}>
+          <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
+          <View style={styles.notificationDot} />
+        </TouchableOpacity>
       </View>
 
       {/* Tabs */}
@@ -223,7 +223,10 @@ const ApplicationsScreen = () => {
               setIsLoading(true);
             }}
           >
-            <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
+            <Text style={[
+              styles.tabText,
+              activeTab === tab && styles.tabTextActive,
+            ]}>
               {tab}
             </Text>
           </TouchableOpacity>
@@ -234,7 +237,6 @@ const ApplicationsScreen = () => {
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading applications...</Text>
         </View>
       ) : (
         <FlatList
@@ -265,11 +267,7 @@ const ApplicationsScreen = () => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalIconContainer}>
-              <Ionicons
-                name="alert-circle-outline"
-                size={48}
-                color={colors.warning}
-              />
+              <Ionicons name="alert-circle-outline" size={48} color={colors.warning} />
             </View>
             <Text style={styles.modalTitle}>Withdraw Application?</Text>
             <Text style={styles.modalSubtitle}>
@@ -279,7 +277,6 @@ const ApplicationsScreen = () => {
               </Text>
               ? This action cannot be undone.
             </Text>
-
             <TouchableOpacity
               style={[styles.modalWithdrawButton, isWithdrawing && { opacity: 0.7 }]}
               onPress={handleWithdraw}
@@ -289,12 +286,9 @@ const ApplicationsScreen = () => {
               {isWithdrawing ? (
                 <ActivityIndicator color={colors.white} />
               ) : (
-                <Text style={styles.modalWithdrawButtonText}>
-                  Yes, Withdraw
-                </Text>
+                <Text style={styles.modalWithdrawButtonText}>Yes, Withdraw</Text>
               )}
             </TouchableOpacity>
-
             <TouchableOpacity
               style={styles.modalCancelButton}
               onPress={() => setWithdrawModal(false)}
@@ -315,31 +309,46 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingTop: 60,
-    paddingBottom: 24,
-    paddingHorizontal: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: colors.background,
   },
   headerTitle: {
     fontSize: typography.xxl,
     fontWeight: typography.bold,
-    color: colors.white,
-    marginBottom: 4,
+    color: colors.textPrimary,
   },
-  headerSubtitle: {
-    fontSize: typography.sm,
-    color: 'rgba(255,255,255,0.8)',
+  bellButton: {
+    position: 'relative',
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.error,
+    borderWidth: 1.5,
+    borderColor: colors.white,
   },
   tabsContainer: {
     flexDirection: 'row',
-    marginHorizontal: 24,
-    marginTop: 20,
+    marginHorizontal: 16,
     marginBottom: 16,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: colors.white,
     borderRadius: 12,
     padding: 4,
+    borderWidth: 1,
+    borderColor: colors.border,
   },
   tab: {
     flex: 1,
@@ -348,12 +357,7 @@ const styles = StyleSheet.create({
     borderRadius: 10,
   },
   tabActive: {
-    backgroundColor: colors.white,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
-    shadowRadius: 4,
-    elevation: 2,
+    backgroundColor: colors.primary,
   },
   tabText: {
     fontSize: typography.sm,
@@ -361,18 +365,18 @@ const styles = StyleSheet.create({
     fontWeight: typography.medium,
   },
   tabTextActive: {
-    color: colors.primary,
+    color: colors.white,
     fontWeight: typography.bold,
   },
   listContainer: {
-    paddingHorizontal: 24,
+    paddingHorizontal: 16,
     paddingBottom: 100,
   },
   card: {
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: colors.border,
     shadowColor: colors.black,
@@ -383,114 +387,101 @@ const styles = StyleSheet.create({
   },
   cardHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
     marginBottom: 12,
   },
   facilityIconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primaryLight,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   cardHeaderText: {
     flex: 1,
   },
-  shiftTitle: {
+  titleRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  facilityName: {
     fontSize: typography.md,
     fontWeight: typography.bold,
     color: colors.textPrimary,
-    marginBottom: 2,
-  },
-  facilityName: {
-    fontSize: typography.sm,
-    color: colors.textSecondary,
+    flex: 1,
+    marginRight: 8,
   },
   statusBadge: {
-    paddingHorizontal: 10,
-    paddingVertical: 4,
-    borderRadius: 8,
+    paddingHorizontal: 8,
+    paddingVertical: 3,
+    borderRadius: 6,
   },
   statusText: {
     fontSize: typography.xs,
     fontWeight: typography.bold,
   },
-  cardDivider: {
-    height: 1,
-    backgroundColor: colors.borderLight,
-    marginBottom: 12,
+  roleText: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
   },
-  cardDetails: {
+  shiftInfo: {
+    gap: 6,
+    marginBottom: 12,
+    paddingLeft: 4,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  infoText: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+  },
+  cardFooter: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: 8,
+    borderTopWidth: 1,
+    borderTopColor: colors.borderLight,
+    paddingTop: 12,
   },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    flex: 1,
-  },
-  detailText: {
+  timeAgoText: {
     fontSize: typography.sm,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  payText: {
-    fontSize: typography.md,
-    fontWeight: typography.bold,
-    color: colors.primary,
-  },
-  cardActions: {
-    marginTop: 12,
+    color: colors.textMuted,
   },
   withdrawButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 6,
-    height: 44,
-    borderRadius: 10,
-    borderWidth: 1.5,
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 8,
+    borderWidth: 1,
     borderColor: colors.error,
-    backgroundColor: '#FFF0F0',
   },
   withdrawButtonText: {
     fontSize: typography.sm,
-    fontWeight: typography.bold,
     color: colors.error,
+    fontWeight: typography.medium,
   },
-  viewButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  chevronContainer: {
+    width: 32,
+    height: 32,
     justifyContent: 'center',
-    gap: 6,
-    height: 44,
-    borderRadius: 10,
-    backgroundColor: colors.primary,
-  },
-  viewButtonText: {
-    fontSize: typography.sm,
-    fontWeight: typography.bold,
-    color: colors.white,
+    alignItems: 'center',
   },
   loadingContainer: {
     flex: 1,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 12,
-  },
-  loadingText: {
-    fontSize: typography.md,
-    color: colors.textSecondary,
   },
   emptyContainer: {
     alignItems: 'center',
     paddingTop: 80,
     gap: 12,
+    paddingHorizontal: 24,
   },
   emptyTitle: {
     fontSize: typography.lg,

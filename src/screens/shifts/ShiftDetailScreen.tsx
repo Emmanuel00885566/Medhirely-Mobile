@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -55,6 +56,13 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
     );
   }
 
+  // Payment breakdown calculation
+  const basePay = shift.payPerShift;
+  const hourlyRate = shift.hourlyRate;
+  const platformFee = 500;
+  const tax = Math.round(basePay * 0.05);
+  const youEarned = basePay - platformFee - tax;
+
   return (
     <View style={styles.container}>
       {/* Header */}
@@ -63,142 +71,125 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={22} color={colors.white} />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Shift Details</Text>
-        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Facility Card */}
+        {/* Facility Info */}
         <View style={styles.facilityCard}>
           <View style={styles.facilityIconContainer}>
-            <Ionicons name="business" size={32} color={colors.primary} />
+            <Ionicons name="add" size={28} color={colors.white} />
           </View>
           <View style={styles.facilityInfo}>
-            <Text style={styles.shiftTitle}>{shift.title}</Text>
-            <Text style={styles.facilityName}>{shift.facility}</Text>
-            <View style={styles.locationRow}>
-              <Ionicons
-                name="location-outline"
-                size={14}
-                color={colors.textMuted}
-              />
-              <Text style={styles.locationText}>{shift.location}</Text>
+            <View style={styles.facilityNameRow}>
+              <Text style={styles.facilityName}>{shift.facility}</Text>
+              {shift.facilityVerified && (
+                <Image
+                  source={require('../../assets/verified.png')}
+                  style={styles.verifiedIcon}
+                />
+              )}
+            </View>
+            <Text style={styles.specialtyText}>{shift.title}</Text>
+            <View style={styles.ratingRow}>
+              <Ionicons name="star" size={14} color="#FFD700" />
+              <Text style={styles.ratingText}>
+                {shift.facilityRating} ({shift.facilityReviews} reviews)
+              </Text>
+            </View>
+          </View>
+          <View style={styles.payPerShiftContainer}>
+            <Text style={styles.payPerShiftAmount}>
+              ₦{shift.payPerShift.toLocaleString()}
+            </Text>
+            <Text style={styles.payPerShiftLabel}>Per Shift</Text>
+          </View>
+        </View>
+
+        {/* Shift Detail Card */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Shift Detail</Text>
+          <View style={styles.detailCard}>
+            <View style={styles.detailRow}>
+              <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>{shift.date}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>
+                {shift.startTime} - {shift.endTime} ({shift.duration})
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>{shift.address}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="cash-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>
+                ₦{shift.payPerShift.toLocaleString()}
+              </Text>
             </View>
           </View>
         </View>
 
-        {/* Pay Highlight */}
-        <View style={styles.payCard}>
-          <View style={styles.payItem}>
-            <Text style={styles.payValue}>₦{shift.pay.toLocaleString()}</Text>
-            <Text style={styles.payItemLabel}>Total Pay</Text>
-          </View>
-          <View style={styles.payDivider} />
-          <View style={styles.payItem}>
-            <Text style={styles.payValue}>{shift.startTime}</Text>
-            <Text style={styles.payItemLabel}>Start Time</Text>
-          </View>
-          <View style={styles.payDivider} />
-          <View style={styles.payItem}>
-            <Text style={styles.payValue}>{shift.endTime}</Text>
-            <Text style={styles.payItemLabel}>End Time</Text>
-          </View>
+        {/* Response Time */}
+        <View style={styles.responseCard}>
+          <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
+          <Text style={styles.responseText}>
+            The facility usually responds within {shift.responseTime}
+          </Text>
         </View>
 
-        {/* Shift Info */}
+        {/* Payment Breakdown */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Shift Information</Text>
-          <View style={styles.infoCard}>
-            {[
-              {
-                icon: 'calendar-outline',
-                label: 'Date',
-                value: shift.date,
-              },
-              {
-                icon: 'medical-outline',
-                label: 'Specialty',
-                value: shift.specialty,
-              },
-              {
-                icon: 'time-outline',
-                label: 'Duration',
-                value: `${shift.startTime} - ${shift.endTime}`,
-              },
-              {
-                icon: 'location-outline',
-                label: 'Location',
-                value: shift.location,
-              },
-            ].map((item, index) => (
-              <View key={index}>
-                <View style={styles.infoRow}>
-                  <View style={styles.infoIconContainer}>
-                    <Ionicons
-                      name={item.icon as any}
-                      size={18}
-                      color={colors.primary}
-                    />
-                  </View>
-                  <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>{item.label}</Text>
-                    <Text style={styles.infoValue}>{item.value}</Text>
-                  </View>
-                </View>
-                {index < 3 && <View style={styles.infoDivider} />}
-              </View>
-            ))}
+          <Text style={styles.sectionTitle}>Payment Breakdown</Text>
+          <View style={styles.breakdownCard}>
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>
+                Base Pay ({shift.duration})
+              </Text>
+              <Text style={styles.breakdownValue}>
+                {basePay.toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>Hourly Rate</Text>
+              <Text style={styles.breakdownValue}>
+                ₦{hourlyRate.toLocaleString()} / hr
+              </Text>
+            </View>
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>Platform Fee</Text>
+              <Text style={[styles.breakdownValue, { color: colors.error }]}>
+                - ₦{platformFee.toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>Tax (5%)</Text>
+              <Text style={[styles.breakdownValue, { color: colors.error }]}>
+                - ₦{tax.toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.breakdownDivider} />
+            <View style={styles.breakdownRow}>
+              <Text style={styles.youEarnedLabel}>You Earned</Text>
+              <Text style={styles.youEarnedValue}>
+                ₦{youEarned.toLocaleString()}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Requirements */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Requirements</Text>
-          <View style={styles.infoCard}>
-            {shift.requirements.map((req: string, index: number) => (
-              <View key={index} style={styles.requirementRow}>
-                <View style={styles.requirementDot}>
-                  <Ionicons
-                    name="checkmark"
-                    size={12}
-                    color={colors.white}
-                  />
-                </View>
-                <Text style={styles.requirementText}>{req}</Text>
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* About Facility */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About the Facility</Text>
-          <View style={styles.infoCard}>
-            <Text style={styles.aboutText}>
-              {shift.facility} is a leading healthcare institution committed to
-              providing quality medical services. They partner with MedHirely to
-              ensure their patients receive the best care from verified
-              healthcare professionals.
-            </Text>
-          </View>
-        </View>
-
-        <View style={{ height: 120 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
 
       {/* Bottom Apply Button */}
       <View style={styles.bottomContainer}>
-        <View style={styles.bottomPayInfo}>
-          <Text style={styles.bottomPayLabel}>Total Pay</Text>
-          <Text style={styles.bottomPayValue}>
-            ₦{shift.pay.toLocaleString()}
-          </Text>
-        </View>
         <TouchableOpacity
           style={styles.applyButton}
           onPress={() =>
@@ -206,8 +197,7 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
           }
           activeOpacity={0.85}
         >
-          <Text style={styles.applyButtonText}>Apply Now</Text>
-          <Ionicons name="arrow-forward" size={18} color={colors.white} />
+          <Text style={styles.applyButtonText}>Apply</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -229,209 +219,182 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   header: {
-    backgroundColor: colors.primary,
     paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
+    backgroundColor: colors.background,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: typography.lg,
-    fontWeight: typography.bold,
-    color: colors.white,
-  },
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
   facilityCard: {
     flexDirection: 'row',
-    gap: 16,
+    alignItems: 'flex-start',
+    gap: 12,
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
   },
   facilityIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primaryLight,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   facilityInfo: {
     flex: 1,
   },
-  shiftTitle: {
-    fontSize: typography.lg,
-    fontWeight: typography.bold,
-    color: colors.textPrimary,
+  facilityNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
     marginBottom: 4,
   },
   facilityName: {
     fontSize: typography.md,
-    color: colors.textSecondary,
-    marginBottom: 6,
+    fontWeight: typography.bold,
+    color: colors.textPrimary,
+    flex: 1,
   },
-  locationRow: {
+  verifiedIcon: {
+    width: 18,
+    height: 18,
+  },
+  specialtyText: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  locationText: {
+  ratingText: {
     fontSize: typography.sm,
-    color: colors.textMuted,
+    color: colors.textSecondary,
   },
-  payCard: {
-    backgroundColor: colors.primary,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
+  payPerShiftContainer: {
+    alignItems: 'flex-end',
   },
-  payItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  payValue: {
+  payPerShiftAmount: {
     fontSize: typography.lg,
     fontWeight: typography.bold,
-    color: colors.white,
-    marginBottom: 4,
+    color: colors.textPrimary,
   },
-  payItemLabel: {
+  payPerShiftLabel: {
     fontSize: typography.xs,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  payDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    color: colors.textSecondary,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: typography.md,
     fontWeight: typography.bold,
     color: colors.textPrimary,
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  infoCard: {
+  detailCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 14,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  detailText: {
+    fontSize: typography.md,
+    color: colors.textPrimary,
+    flex: 1,
+    lineHeight: 22,
+  },
+  responseCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  responseText: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+    flex: 1,
+  },
+  breakdownCard: {
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  infoRow: {
+  breakdownRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 14,
     paddingVertical: 8,
   },
-  infoIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  infoTextContainer: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: typography.xs,
-    color: colors.textMuted,
-    marginBottom: 2,
-  },
-  infoValue: {
+  breakdownLabel: {
     fontSize: typography.md,
-    fontWeight: typography.medium,
-    color: colors.textPrimary,
-  },
-  infoDivider: {
-    height: 1,
-    backgroundColor: colors.borderLight,
-  },
-  requirementRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 12,
-    marginBottom: 12,
-  },
-  requirementDot: {
-    width: 22,
-    height: 22,
-    borderRadius: 11,
-    backgroundColor: colors.success,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  requirementText: {
-    fontSize: typography.sm,
-    color: colors.textPrimary,
-    flex: 1,
-  },
-  aboutText: {
-    fontSize: typography.sm,
     color: colors.textSecondary,
-    lineHeight: 22,
+  },
+  breakdownValue: {
+    fontSize: typography.md,
+    color: colors.textPrimary,
+    fontWeight: typography.medium,
+  },
+  breakdownDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: 4,
+  },
+  youEarnedLabel: {
+    fontSize: typography.md,
+    fontWeight: typography.bold,
+    color: colors.textPrimary,
+  },
+  youEarnedValue: {
+    fontSize: typography.md,
+    fontWeight: typography.bold,
+    color: colors.primary,
   },
   bottomContainer: {
     position: 'absolute',
     bottom: 0,
     left: 0,
     right: 0,
+    padding: 24,
     backgroundColor: colors.white,
     borderTopWidth: 1,
     borderTopColor: colors.border,
-    padding: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 16,
-  },
-  bottomPayInfo: {
-    flex: 1,
-  },
-  bottomPayLabel: {
-    fontSize: typography.xs,
-    color: colors.textMuted,
-    marginBottom: 2,
-  },
-  bottomPayValue: {
-    fontSize: typography.xl,
-    fontWeight: typography.bold,
-    color: colors.primary,
   },
   applyButton: {
     backgroundColor: colors.primary,
     borderRadius: 12,
-    height: 52,
-    flexDirection: 'row',
+    height: 54,
     justifyContent: 'center',
     alignItems: 'center',
-    gap: 8,
-    paddingHorizontal: 24,
     shadowColor: colors.primary,
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
@@ -442,6 +405,7 @@ const styles = StyleSheet.create({
     fontSize: typography.md,
     fontWeight: typography.bold,
     color: colors.white,
+    letterSpacing: 0.5,
   },
 });
 
