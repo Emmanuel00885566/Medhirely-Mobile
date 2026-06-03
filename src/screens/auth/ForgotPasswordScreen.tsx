@@ -16,6 +16,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AuthStack';
+import { authService } from '../../services/auth';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>;
@@ -33,8 +34,7 @@ const ForgotPasswordScreen = ({ navigation }: Props) => {
     }
     setIsLoading(true);
     try {
-      // Simulate API call
-      await new Promise((res) => setTimeout(res, 1500));
+      await authService.forgotPassword(email);
       setEmailSent(true);
     } catch (error) {
       Alert.alert('Error', 'Something went wrong. Please try again.');

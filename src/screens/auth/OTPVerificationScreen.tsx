@@ -16,6 +16,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AuthStack';
 import { useAuth } from '../../context/AuthContext';
+import { authService } from '../../services/auth';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'OTPVerification'>;
@@ -89,30 +90,20 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
     Keyboard.dismiss();
 
     try {
-      await new Promise((res) => setTimeout(res, 1500));
-
-      if (otpString === MOCK_OTP) {
-        // OTP correct — now actually create the account
-        // In real app, backend verifies OTP then creates account
-        Alert.alert(
-          'Email Verified! ✅',
-          'Your email has been verified successfully.',
-          [
-            {
-              text: 'Sign In',
-              onPress: () => navigation.navigate('Login'),
-              // In a real app, you might auto-login here and navigate to main app
-                // Account is now verified, auth context handles navigation
-            },
-          ]
-        );
-      } else {
-        // Wrong OTP
-        setOtp(['', '', '', '', '', '']);
-        inputRefs.current[0]?.focus();
-        Alert.alert('Invalid OTP', 'The code you entered is incorrect. Please try again.');
-      }
-    } finally {
+  await authService.verifyEmail(email, otpString);
+  Alert.alert(
+    'Email Verified! ✅',
+    'Your email has been verified successfully. Please sign in to continue.',
+    [{ text: 'Sign In', onPress: () => navigation.navigate('Login') }]
+  );
+} catch (error: any) {
+  setOtp(['', '', '', '', '', '']);
+  inputRefs.current[0]?.focus();
+  Alert.alert(
+    'Invalid OTP',
+    error?.response?.data?.message || 'The code you entered is incorrect. Please try again.'
+  );
+} finally {
       setIsVerifying(false);
     }
   };
@@ -121,7 +112,7 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
     if (!canResend) return;
     setIsResending(true);
     try {
-      await new Promise((res) => setTimeout(res, 1000));
+      await authService.resendOtp(email);
       setOtp(['', '', '', '', '', '']);
       setCountdown(RESEND_COUNTDOWN);
       setCanResend(false);

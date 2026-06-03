@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { authService } from '../../services/auth';
 import {
   View,
   Text,
@@ -71,11 +72,10 @@ const SignupScreen = ({ navigation }: Props) => {
     setIsLoading(true);
 
     try {
-      // Simulate sending OTP to email
-      await new Promise((res) => setTimeout(res, 1000));
-      // Navigate to OTP screen with email
-      navigation.navigate('OTPVerification', { email });
-    } catch (error) {
+  await authService.signup(fullName, email, password, phone);
+  navigation.navigate('OTPVerification', { email });
+}
+   catch (error) {
       Alert.alert(
         'Signup Failed',
         'Something went wrong. Please try again.'

@@ -27,75 +27,97 @@ const ProfileScreen = () => {
       'Are you sure you want to sign out?',
       [
         { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Sign Out',
-          style: 'destructive',
-          onPress: logout,
-        },
+        { text: 'Sign Out', style: 'destructive', onPress: logout },
       ]
     );
   };
 
-  const menuItems = [
+  const accountItems = [
     {
       id: 'edit',
       title: 'Edit Profile',
-      subtitle: 'Update your personal information',
       icon: 'person-outline',
       onPress: () => navigation.navigate('EditProfile'),
     },
     {
       id: 'credentials',
       title: 'Manage Credentials',
-      subtitle: 'View and update your documents',
       icon: 'document-text-outline',
       onPress: () => navigation.navigate('ManageCredentials'),
     },
     {
       id: 'reviews',
       title: 'Reviews Received',
-      subtitle: 'See feedback from facilities',
       icon: 'star-outline',
       onPress: () => navigation.navigate('ReviewsReceived'),
     },
+    {
+      id: 'availability',
+      title: 'Availability & Schedule',
+      icon: 'calendar-outline',
+      onPress: () => Alert.alert('Coming Soon', 'Availability settings coming soon!'),
+    },
   ];
 
-  const infoItems = [
+  const settingsItems = [
+    {
+      id: 'payments',
+      title: 'Payment Settings',
+      icon: 'wallet-outline',
+      onPress: () => Alert.alert('Coming Soon', 'Payment settings coming soon!'),
+    },
     {
       id: 'notifications',
       title: 'Notification Settings',
-      subtitle: 'Manage your alerts',
       icon: 'notifications-outline',
       onPress: () => Alert.alert('Coming Soon', 'Notification settings coming soon!'),
     },
     {
       id: 'privacy',
-      title: 'Privacy Policy',
-      subtitle: 'Read our privacy policy',
+      title: 'Privacy & Security',
       icon: 'shield-outline',
-      onPress: () => Alert.alert('Coming Soon', 'Privacy policy coming soon!'),
+      onPress: () => Alert.alert('Coming Soon', 'Privacy settings coming soon!'),
     },
     {
-      id: 'terms',
-      title: 'Terms of Service',
-      subtitle: 'Read our terms of service',
-      icon: 'document-outline',
-      onPress: () => Alert.alert('Coming Soon', 'Terms of service coming soon!'),
-    },
-    {
-      id: 'support',
+      id: 'help',
       title: 'Help & Support',
-      subtitle: 'Get help from our team',
       icon: 'help-circle-outline',
       onPress: () => Alert.alert('Coming Soon', 'Support coming soon!'),
     },
+    {
+      id: 'terms',
+      title: 'Terms & Conditions',
+      icon: 'document-outline',
+      onPress: () => Alert.alert('Coming Soon', 'Terms coming soon!'),
+    },
   ];
+
+  const renderMenuItem = (item: any, index: number, total: number) => (
+    <View key={item.id}>
+      <TouchableOpacity
+        style={styles.menuItem}
+        onPress={item.onPress}
+        activeOpacity={0.85}
+      >
+        <View style={styles.menuIconContainer}>
+          <Ionicons name={item.icon} size={20} color={colors.primary} />
+        </View>
+        <Text style={styles.menuTitle}>{item.title}</Text>
+        <Ionicons name="chevron-forward" size={18} color={colors.textMuted} />
+      </TouchableOpacity>
+      {index < total - 1 && <View style={styles.menuDivider} />}
+    </View>
+  );
 
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
+        <TouchableOpacity style={styles.bellButton}>
+          <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
+          <View style={styles.notificationDot} />
+        </TouchableOpacity>
       </View>
 
       <ScrollView
@@ -104,6 +126,7 @@ const ProfileScreen = () => {
       >
         {/* Profile Card */}
         <View style={styles.profileCard}>
+          {/* Avatar */}
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>
               {user?.name?.charAt(0).toUpperCase()}
@@ -115,7 +138,6 @@ const ProfileScreen = () => {
 
           <Text style={styles.profileName}>{user?.name}</Text>
           <Text style={styles.profileSpecialty}>{user?.specialty}</Text>
-          <Text style={styles.profileEmail}>{user?.email}</Text>
 
           {/* Verification Badge */}
           <View style={[
@@ -135,10 +157,10 @@ const ProfileScreen = () => {
             </Text>
           </View>
 
-          {/* Stats Row */}
+          {/* Stats */}
           <View style={styles.statsRow}>
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>12</Text>
+              <Text style={styles.statValue}>28</Text>
               <Text style={styles.statLabel}>Shifts</Text>
             </View>
             <View style={styles.statDivider} />
@@ -148,8 +170,8 @@ const ProfileScreen = () => {
             </View>
             <View style={styles.statDivider} />
             <View style={styles.statItem}>
-              <Text style={styles.statValue}>8</Text>
-              <Text style={styles.statLabel}>Reviews</Text>
+              <Text style={styles.statValue}>212</Text>
+              <Text style={styles.statLabel}>Hours</Text>
             </View>
           </View>
         </View>
@@ -157,75 +179,23 @@ const ProfileScreen = () => {
         {/* Account Section */}
         <Text style={styles.sectionTitle}>Account</Text>
         <View style={styles.menuCard}>
-          {menuItems.map((item, index) => (
-            <View key={item.id}>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={item.onPress}
-                activeOpacity={0.85}
-              >
-                <View style={styles.menuIconContainer}>
-                  <Ionicons
-                    name={item.icon as any}
-                    size={20}
-                    color={colors.primary}
-                  />
-                </View>
-                <View style={styles.menuTextContainer}>
-                  <Text style={styles.menuTitle}>{item.title}</Text>
-                  <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={colors.textMuted}
-                />
-              </TouchableOpacity>
-              {index < menuItems.length - 1 && (
-                <View style={styles.menuDivider} />
-              )}
-            </View>
-          ))}
+          {accountItems.map((item, index) =>
+            renderMenuItem(item, index, accountItems.length)
+          )}
         </View>
 
-        {/* Info Section */}
-        <Text style={styles.sectionTitle}>Information</Text>
+        {/* Settings Section */}
+        <Text style={styles.sectionTitle}>Settings</Text>
         <View style={styles.menuCard}>
-          {infoItems.map((item, index) => (
-            <View key={item.id}>
-              <TouchableOpacity
-                style={styles.menuItem}
-                onPress={item.onPress}
-                activeOpacity={0.85}
-              >
-                <View style={styles.menuIconContainer}>
-                  <Ionicons
-                    name={item.icon as any}
-                    size={20}
-                    color={colors.primary}
-                  />
-                </View>
-                <View style={styles.menuTextContainer}>
-                  <Text style={styles.menuTitle}>{item.title}</Text>
-                  <Text style={styles.menuSubtitle}>{item.subtitle}</Text>
-                </View>
-                <Ionicons
-                  name="chevron-forward"
-                  size={18}
-                  color={colors.textMuted}
-                />
-              </TouchableOpacity>
-              {index < infoItems.length - 1 && (
-                <View style={styles.menuDivider} />
-              )}
-            </View>
-          ))}
+          {settingsItems.map((item, index) =>
+            renderMenuItem(item, index, settingsItems.length)
+          )}
         </View>
 
-        {/* App Version */}
+        {/* Version */}
         <Text style={styles.versionText}>MedHirely v1.0.0 (MVP)</Text>
 
-        {/* Logout Button */}
+        {/* Logout */}
         <TouchableOpacity
           style={styles.logoutButton}
           onPress={handleLogout}
@@ -247,21 +217,39 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: colors.primary,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     paddingTop: 60,
-    paddingBottom: 24,
-    paddingHorizontal: 24,
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: colors.background,
   },
   headerTitle: {
     fontSize: typography.xxl,
     fontWeight: typography.bold,
-    color: colors.white,
+    color: colors.textPrimary,
+  },
+  bellButton: {
+    position: 'relative',
+    width: 44,
+    height: 44,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notificationDot: {
+    position: 'absolute',
+    top: 6,
+    right: 6,
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: colors.error,
+    borderWidth: 1.5,
+    borderColor: colors.white,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: 16,
   },
   profileCard: {
     backgroundColor: colors.white,
@@ -271,11 +259,6 @@ const styles = StyleSheet.create({
     marginBottom: 24,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
   },
   avatarContainer: {
     width: 90,
@@ -284,7 +267,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 16,
+    marginBottom: 12,
     position: 'relative',
   },
   avatarText: {
@@ -315,11 +298,6 @@ const styles = StyleSheet.create({
     fontSize: typography.md,
     color: colors.primary,
     fontWeight: typography.medium,
-    marginBottom: 4,
-  },
-  profileEmail: {
-    fontSize: typography.sm,
-    color: colors.textSecondary,
     marginBottom: 12,
   },
   verificationBadge: {
@@ -370,7 +348,7 @@ const styles = StyleSheet.create({
   menuCard: {
     backgroundColor: colors.white,
     borderRadius: 16,
-    padding: 4,
+    paddingVertical: 4,
     marginBottom: 24,
     borderWidth: 1,
     borderColor: colors.border,
@@ -378,34 +356,28 @@ const styles = StyleSheet.create({
   menuItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: 14,
+    paddingHorizontal: 16,
+    paddingVertical: 14,
     gap: 14,
   },
   menuIconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 36,
+    height: 36,
+    borderRadius: 18,
     backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  menuTextContainer: {
-    flex: 1,
-  },
   menuTitle: {
+    flex: 1,
     fontSize: typography.md,
-    fontWeight: typography.medium,
     color: colors.textPrimary,
-    marginBottom: 2,
-  },
-  menuSubtitle: {
-    fontSize: typography.sm,
-    color: colors.textSecondary,
+    fontWeight: typography.medium,
   },
   menuDivider: {
     height: 1,
     backgroundColor: colors.borderLight,
-    marginHorizontal: 14,
+    marginHorizontal: 16,
   },
   versionText: {
     fontSize: typography.sm,

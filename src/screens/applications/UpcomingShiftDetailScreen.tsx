@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
-  Clipboard,
+  Linking,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -26,7 +26,7 @@ const UpcomingShiftDetailScreen = ({ navigation, route }: Props) => {
   const { applicationId } = route.params;
   const [application, setApplication] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [pinRevealed, setPinRevealed] = useState(false);
+  const [checkedIn, setCheckedIn] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -37,9 +37,26 @@ const UpcomingShiftDetailScreen = ({ navigation, route }: Props) => {
     load();
   }, []);
 
-  const handleCopyPin = () => {
-    Clipboard.setString(application?.shift?.checkInPin || '');
-    Alert.alert('Copied!', 'Check-in PIN copied to clipboard');
+  const handleCheckIn = () => {
+    Alert.alert(
+      'Shift Check-in',
+      'Confirm you have arrived at the facility and are ready to start your shift.',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Check In',
+          onPress: () => {
+            setCheckedIn(true);
+            Alert.alert('Checked In! ✅', 'You have successfully checked in. Have a great shift!');
+          },
+        },
+      ]
+    );
+  };
+
+  const handleGetDirections = () => {
+    const address = encodeURIComponent(application?.shift?.address || '');
+    Linking.openURL(`https://maps.google.com/?q=${address}`);
   };
 
   if (isLoading) {
@@ -60,148 +77,151 @@ const UpcomingShiftDetailScreen = ({ navigation, route }: Props) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={22} color={colors.white} />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Upcoming Shift</Text>
-        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Status Banner */}
-        <View style={styles.statusBanner}>
-          <Ionicons name="checkmark-circle" size={24} color={colors.success} />
-          <Text style={styles.statusBannerText}>
-            Your application has been accepted!
+        {/* Facility Info */}
+        <View style={styles.facilityCard}>
+          <View style={styles.facilityIconContainer}>
+            <Ionicons name="add" size={28} color={colors.white} />
+          </View>
+          <View style={styles.facilityInfo}>
+            <View style={styles.facilityNameRow}>
+              <Text style={styles.facilityName}>{shift?.facility}</Text>
+              <View style={styles.pendingBadge}>
+                <Text style={styles.pendingBadgeText}>Pending</Text>
+              </View>
+            </View>
+            <Text style={styles.specialtyText}>{shift?.title}</Text>
+            <View style={styles.ratingRow}>
+              <Ionicons name="star" size={14} color="#FFD700" />
+              <Text style={styles.ratingText}>4.5 (21 reviews)</Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Shift Detail */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Shift Detail</Text>
+          <View style={styles.detailCard}>
+            <View style={styles.detailRow}>
+              <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>{shift?.date}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>
+                {shift?.startTime} - {shift?.endTime}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>{shift?.address}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="cash-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>
+                ₦{shift?.pay?.toLocaleString()}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Check in notice */}
+        <View style={styles.checkInNotice}>
+          <Ionicons name="checkmark-circle-outline" size={18} color={colors.success} />
+          <Text style={styles.checkInNoticeText}>
+            Please Check in 15 minutes before your shift starts
           </Text>
         </View>
 
-        {/* Facility Card */}
-        <View style={styles.facilityCard}>
-          <View style={styles.facilityIconContainer}>
-            <Ionicons name="business" size={32} color={colors.primary} />
-          </View>
-          <View style={styles.facilityInfo}>
-            <Text style={styles.shiftTitle}>{shift?.title}</Text>
-            <Text style={styles.facilityName}>{shift?.facility}</Text>
-            <View style={styles.locationRow}>
-              <Ionicons name="location-outline" size={14} color={colors.textMuted} />
-              <Text style={styles.locationText}>{shift?.location}</Text>
+        {/* Facility Contact */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Facility Contact</Text>
+          <View style={styles.contactCard}>
+            <View style={styles.contactLeft}>
+              <Ionicons name="call-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.contactNumber}>{shift?.contactPhone}</Text>
             </View>
+            <TouchableOpacity
+              style={styles.messageButton}
+              onPress={() => Alert.alert('Message', 'Messaging coming soon!')}
+            >
+              <Ionicons name="chatbubble-outline" size={20} color={colors.primary} />
+            </TouchableOpacity>
           </View>
         </View>
 
-        {/* Shift Info */}
+        {/* Notes from Facility */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Shift Details</Text>
-          <View style={styles.infoCard}>
-            {[
-              { icon: 'calendar-outline', label: 'Date', value: shift?.date },
-              { icon: 'time-outline', label: 'Time', value: `${shift?.startTime} - ${shift?.endTime}` },
-              { icon: 'location-outline', label: 'Address', value: shift?.address },
-              { icon: 'cash-outline', label: 'Pay', value: `₦${shift?.pay?.toLocaleString()}` },
-            ].map((item, index) => (
-              <View key={index}>
-                <View style={styles.infoRow}>
-                  <View style={styles.infoIconContainer}>
-                    <Ionicons name={item.icon as any} size={18} color={colors.primary} />
-                  </View>
-                  <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>{item.label}</Text>
-                    <Text style={styles.infoValue}>{item.value}</Text>
-                  </View>
-                </View>
-                {index < 3 && <View style={styles.infoDivider} />}
-              </View>
-            ))}
-          </View>
-        </View>
-
-        {/* Contact Info */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Contact Information</Text>
-          <View style={styles.infoCard}>
-            <View style={styles.infoRow}>
-              <View style={styles.infoIconContainer}>
-                <Ionicons name="person-outline" size={18} color={colors.primary} />
-              </View>
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>Contact Person</Text>
-                <Text style={styles.infoValue}>{shift?.contactName}</Text>
-              </View>
-            </View>
-            <View style={styles.infoDivider} />
-            <View style={styles.infoRow}>
-              <View style={styles.infoIconContainer}>
-                <Ionicons name="call-outline" size={18} color={colors.primary} />
-              </View>
-              <View style={styles.infoTextContainer}>
-                <Text style={styles.infoLabel}>Phone Number</Text>
-                <Text style={styles.infoValue}>{shift?.contactPhone}</Text>
-              </View>
-              <TouchableOpacity
-                style={styles.callButton}
-                onPress={() => Alert.alert('Call', `Calling ${shift?.contactPhone}`)}
-              >
-                <Ionicons name="call" size={16} color={colors.white} />
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-
-        {/* Check-in PIN */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Check-in PIN</Text>
-          <View style={styles.pinCard}>
-            <View style={styles.pinHeader}>
-              <Ionicons name="key-outline" size={20} color={colors.primary} />
-              <Text style={styles.pinHeaderText}>
-                Use this PIN to check in at the facility
-              </Text>
-            </View>
-            <View style={styles.pinContainer}>
-              {pinRevealed ? (
-                <Text style={styles.pinText}>{shift?.checkInPin}</Text>
-              ) : (
-                <Text style={styles.pinHidden}>••••</Text>
-              )}
-              <View style={styles.pinActions}>
-                <TouchableOpacity
-                  style={styles.pinActionButton}
-                  onPress={() => setPinRevealed(!pinRevealed)}
-                >
-                  <Ionicons
-                    name={pinRevealed ? 'eye-off-outline' : 'eye-outline'}
-                    size={20}
-                    color={colors.primary}
-                  />
-                </TouchableOpacity>
-                <TouchableOpacity
-                  style={styles.pinActionButton}
-                  onPress={handleCopyPin}
-                >
-                  <Ionicons name="copy-outline" size={20} color={colors.primary} />
-                </TouchableOpacity>
-              </View>
-            </View>
-            <Text style={styles.pinNote}>
-              ⚠️ Keep this PIN confidential. Only share with the facility coordinator.
+          <Text style={styles.sectionTitle}>Notes from Facility</Text>
+          <View style={styles.notesCard}>
+            <Text style={styles.notesText}>
+              {shift?.notes || 'Please carry your ID card and arrive on time. Thank you!'}
             </Text>
           </View>
         </View>
 
-        {/* Important Notice */}
-        <View style={styles.noticeCard}>
-          <Ionicons name="information-circle-outline" size={20} color={colors.warning} />
-          <Text style={styles.noticeText}>
-            Please arrive at least 15 minutes before your shift starts. Contact the facility if you need to cancel.
-          </Text>
+        {/* Application Info */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Application Info</Text>
+          <View style={styles.infoCard}>
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Applied on</Text>
+              <Text style={styles.infoValue}>
+                {new Date(application?.appliedAt).toLocaleDateString('en-NG', {
+                  day: 'numeric',
+                  month: 'long',
+                  year: 'numeric',
+                })}
+              </Text>
+            </View>
+            <View style={styles.infoDivider} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Status</Text>
+              <Text style={[styles.infoValue, { color: colors.warning }]}>
+                Pending
+              </Text>
+            </View>
+            <View style={styles.infoDivider} />
+            <View style={styles.infoRow}>
+              <Text style={styles.infoLabel}>Application ID</Text>
+              <Text style={styles.infoValue}>APP{application?.id}65</Text>
+            </View>
+          </View>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
+
+      {/* Bottom Buttons */}
+      <View style={styles.bottomContainer}>
+        <TouchableOpacity
+          style={styles.directionsButton}
+          onPress={handleGetDirections}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.directionsButtonText}>Get Directions</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.checkInButton,
+            checkedIn && styles.checkedInButton,
+          ]}
+          onPress={handleCheckIn}
+          disabled={checkedIn}
+          activeOpacity={0.85}
+        >
+          <Text style={styles.checkInButtonText}>
+            {checkedIn ? 'Checked In ✅' : 'Shift Check-in'}
+          </Text>
+        </TouchableOpacity>
+      </View>
     </View>
   );
 };
@@ -217,98 +237,162 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: colors.primary,
     paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: typography.lg,
-    fontWeight: typography.bold,
-    color: colors.white,
-  },
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-  },
-  statusBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: colors.secondaryLight,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
-  },
-  statusBannerText: {
-    fontSize: typography.sm,
-    color: colors.success,
-    fontWeight: typography.semiBold,
-    flex: 1,
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
   facilityCard: {
     flexDirection: 'row',
-    gap: 16,
+    alignItems: 'flex-start',
+    gap: 12,
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 24,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
   },
   facilityIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primaryLight,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   facilityInfo: {
     flex: 1,
   },
-  shiftTitle: {
-    fontSize: typography.lg,
-    fontWeight: typography.bold,
-    color: colors.textPrimary,
+  facilityNameRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
     marginBottom: 4,
   },
   facilityName: {
     fontSize: typography.md,
-    color: colors.textSecondary,
-    marginBottom: 6,
+    fontWeight: typography.bold,
+    color: colors.textPrimary,
+    flex: 1,
+    marginRight: 8,
   },
-  locationRow: {
+  pendingBadge: {
+    backgroundColor: '#FFF3E0',
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 8,
+  },
+  pendingBadgeText: {
+    fontSize: typography.xs,
+    fontWeight: typography.bold,
+    color: colors.warning,
+  },
+  specialtyText: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+    marginBottom: 4,
+  },
+  ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  locationText: {
+  ratingText: {
     fontSize: typography.sm,
-    color: colors.textMuted,
+    color: colors.textSecondary,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: typography.md,
     fontWeight: typography.bold,
     color: colors.textPrimary,
-    marginBottom: 12,
+    marginBottom: 10,
+  },
+  detailCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 14,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  detailText: {
+    fontSize: typography.md,
+    color: colors.textPrimary,
+    flex: 1,
+    lineHeight: 22,
+  },
+  checkInNotice: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    backgroundColor: colors.secondaryLight,
+    borderRadius: 12,
+    padding: 14,
+    marginBottom: 16,
+  },
+  checkInNoticeText: {
+    flex: 1,
+    fontSize: typography.sm,
+    color: colors.success,
+    fontWeight: typography.medium,
+  },
+  contactCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  contactLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  contactNumber: {
+    fontSize: typography.md,
+    fontWeight: typography.medium,
+    color: colors.textPrimary,
+  },
+  messageButton: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    backgroundColor: colors.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  notesCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  notesText: {
+    fontSize: typography.md,
+    color: colors.textSecondary,
+    lineHeight: 22,
   },
   infoCard: {
     backgroundColor: colors.white,
@@ -319,25 +403,13 @@ const styles = StyleSheet.create({
   },
   infoRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 14,
-    paddingVertical: 8,
-  },
-  infoIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  infoTextContainer: {
-    flex: 1,
+    paddingVertical: 10,
   },
   infoLabel: {
-    fontSize: typography.xs,
-    color: colors.textMuted,
-    marginBottom: 2,
+    fontSize: typography.md,
+    color: colors.textSecondary,
   },
   infoValue: {
     fontSize: typography.md,
@@ -348,83 +420,47 @@ const styles = StyleSheet.create({
     height: 1,
     backgroundColor: colors.borderLight,
   },
-  callButton: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+  bottomContainer: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    flexDirection: 'row',
+    gap: 12,
+    padding: 24,
+    backgroundColor: colors.white,
+    borderTopWidth: 1,
+    borderTopColor: colors.border,
+  },
+  directionsButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  directionsButtonText: {
+    fontSize: typography.md,
+    fontWeight: typography.semiBold,
+    color: colors.textPrimary,
+  },
+  checkInButton: {
+    flex: 1,
+    height: 52,
+    borderRadius: 12,
     backgroundColor: colors.success,
     justifyContent: 'center',
     alignItems: 'center',
   },
-  pinCard: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
+  checkedInButton: {
+    backgroundColor: colors.secondaryLight,
   },
-  pinHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    marginBottom: 16,
-  },
-  pinHeaderText: {
-    fontSize: typography.sm,
-    color: colors.textSecondary,
-    flex: 1,
-  },
-  pinContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.primaryLight,
-    borderRadius: 12,
-    padding: 16,
-    marginBottom: 12,
-  },
-  pinText: {
-    fontSize: 32,
+  checkInButtonText: {
+    fontSize: typography.md,
     fontWeight: typography.bold,
-    color: colors.primary,
-    letterSpacing: 8,
-  },
-  pinHidden: {
-    fontSize: 32,
-    fontWeight: typography.bold,
-    color: colors.primary,
-    letterSpacing: 8,
-  },
-  pinActions: {
-    flexDirection: 'row',
-    gap: 8,
-  },
-  pinActionButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.white,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  pinNote: {
-    fontSize: typography.xs,
-    color: colors.textMuted,
-    lineHeight: 18,
-  },
-  noticeCard: {
-    flexDirection: 'row',
-    backgroundColor: '#FFF3E0',
-    borderRadius: 12,
-    padding: 14,
-    gap: 10,
-    alignItems: 'flex-start',
-  },
-  noticeText: {
-    flex: 1,
-    fontSize: typography.sm,
-    color: colors.warning,
-    lineHeight: 20,
+    color: colors.white,
   },
 });
 

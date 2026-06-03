@@ -21,6 +21,7 @@ import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AuthStack';
+import { authService } from '../../services/auth';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Login'>;
@@ -45,9 +46,10 @@ const LoginScreen = ({ navigation }: Props) => {
 
     setIsLoading(true);
 
-    try {
-      await login(emailOrName, password);
-    } catch (error) {
+try {
+  const { token, user } = await authService.login(emailOrName, password);
+  await login(emailOrName, password);
+} catch (error) {
       Alert.alert('Login Failed', 'Invalid email or password');
     } finally {
       setIsLoading(false);
