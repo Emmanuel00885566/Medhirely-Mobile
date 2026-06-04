@@ -2,7 +2,7 @@ import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 // 👇 When your backend is ready, just change this URL
-const BASE_URL = 'https://your-api-url.com/api';
+const BASE_URL = 'https://medhirely-backend.onrender.com';
 
 const api = axios.create({
   baseURL: BASE_URL,

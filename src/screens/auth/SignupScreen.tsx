@@ -1,5 +1,4 @@
 import React, { useState } from 'react';
-import { authService } from '../../services/auth';
 import {
   View,
   Text,
@@ -11,60 +10,47 @@ import {
   Platform,
   ScrollView,
   Alert,
-  Dimensions,
   Image,
 } from 'react-native';
-
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { Ionicons } from '@expo/vector-icons';
-
-import { useAuth } from '../../context/AuthContext';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AuthStack';
+import { authService } from '../../services/auth';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Signup'>;
 };
 
-const { width } = Dimensions.get('window');
+const COUNTRIES = ['Nigeria', 'Ghana', 'Kenya', 'South Africa', 'Other'];
 
 const SignupScreen = ({ navigation }: Props) => {
-  const { signup } = useAuth();
-
-  const [fullName, setFullName] = useState('');
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('');
   const [password, setPassword] = useState('');
-  const [confirmPassword, setConfirmPassword] = useState('');
-
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] =
-    useState(false);
-
+  const [country, setCountry] = useState('Nigeria');
+  const [showCountryPicker, setShowCountryPicker] = useState(false);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSignup = async () => {
-    if (
-      !fullName ||
-      !email ||
-      !phone ||
-      !password ||
-      !confirmPassword
-    ) {
+    if (!firstName || !lastName || !email || !password) {
       Alert.alert('Error', 'Please fill in all fields');
       return;
     }
 
-    if (password !== confirmPassword) {
-      Alert.alert('Error', 'Passwords do not match');
+    if (password.length < 8) {
+      Alert.alert('Error', 'Password must be at least 8 characters');
       return;
     }
 
-    if (password.length < 8) {
+    if (!agreedToTerms) {
       Alert.alert(
         'Error',
-        'Password must be at least 8 characters with a mix of letters & numbers'
+        'Please agree to the Terms of Service and Privacy Policy'
       );
       return;
     }
@@ -72,10 +58,14 @@ const SignupScreen = ({ navigation }: Props) => {
     setIsLoading(true);
 
     try {
-  await authService.signup(fullName, email, password, phone);
-  navigation.navigate('OTPVerification', { email });
-}
-   catch (error) {
+      await authService.signup(
+        `${firstName} ${lastName}`,
+        email,
+        password
+      );
+
+      navigation.navigate('OTPVerification', { email });
+    } catch (error) {
       Alert.alert(
         'Signup Failed',
         'Something went wrong. Please try again.'
@@ -95,247 +85,275 @@ const SignupScreen = ({ navigation }: Props) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* Back Button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons
+            name="arrow-back"
+            size={22}
+            color={colors.textPrimary}
+          />
+        </TouchableOpacity>
+
         {/* Logo */}
-        <View style={styles.logoSection}>
-          <View style={styles.logoContainer}>
-            <Image
-              source={require('../../assets/mdi_heart.png')}
-              style={{ width: 80, height: 80 }}
-              resizeMode="contain"
+        <View style={styles.headerSection}>
+          <Image
+            source={require('../../assets/logo.png')}
+            style={styles.logo}
+            resizeMode="contain"
+          />
+        </View>
+
+        {/* Google Button */}
+        <TouchableOpacity
+          style={styles.googleButton}
+          activeOpacity={0.85}
+          onPress={() =>
+            Alert.alert(
+              'Coming Soon',
+              'Google sign in coming soon!'
+            )
+          }
+        >
+          <Image
+            source={require('../../assets/google-logo.png')}
+            style={styles.socialIcon}
+            resizeMode="contain"
+          />
+
+          <Text style={styles.googleButtonText}>
+            Continue with Google
+          </Text>
+        </TouchableOpacity>
+
+        {/* Divider */}
+        <View style={styles.divider}>
+          <View style={styles.dividerLine} />
+          <Text style={styles.dividerText}>Or</Text>
+          <View style={styles.dividerLine} />
+        </View>
+
+        {/* First Name + Last Name */}
+        <View style={styles.nameRow}>
+          <View style={[styles.inputGroup, { flex: 1 }]}>
+            <Text style={styles.label}>First Name</Text>
+
+            <TextInput
+              style={styles.nameInput}
+              placeholder="First Name"
+              placeholderTextColor={colors.textMuted}
+              value={firstName}
+              onChangeText={setFirstName}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <View style={[styles.inputGroup, { flex: 1 }]}>
+            <Text style={styles.label}>Last Name</Text>
+
+            <TextInput
+              style={styles.nameInput}
+              placeholder="Last Name"
+              placeholderTextColor={colors.textMuted}
+              value={lastName}
+              onChangeText={setLastName}
+              autoCapitalize="words"
             />
           </View>
         </View>
 
-        {/* Form Card */}
-        <View style={styles.card}>
-          <Text style={styles.cardTitle}>
-            Create Your Account
-          </Text>
+        {/* Email */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Email</Text>
 
-          {/* Full Name */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
+          <TextInput
+            style={styles.input}
+            placeholder="Email"
+            placeholderTextColor={colors.textMuted}
+            value={email}
+            onChangeText={setEmail}
+            keyboardType="email-address"
+            autoCapitalize="none"
+          />
+        </View>
 
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your full name"
-                placeholderTextColor={colors.textMuted}
-                value={fullName}
-                onChangeText={setFullName}
-                autoCapitalize="words"
-              />
-            </View>
-          </View>
+        {/* Password */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Password</Text>
 
-          {/* Email */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Email Address</Text>
-
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your email"
-                placeholderTextColor={colors.textMuted}
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-            </View>
-          </View>
-
-          {/* Phone */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Phone Number</Text>
-
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Enter your phone number"
-                placeholderTextColor={colors.textMuted}
-                value={phone}
-                onChangeText={setPhone}
-                keyboardType="phone-pad"
-              />
-            </View>
-          </View>
-
-          {/* Password */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>Create Password</Text>
-
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Create a password"
-                placeholderTextColor={colors.textMuted}
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry={!showPassword}
-              />
-
-              <TouchableOpacity
-                onPress={() =>
-                  setShowPassword(!showPassword)
-                }
-                hitSlop={{
-                  top: 10,
-                  bottom: 10,
-                  left: 10,
-                  right: 10,
-                }}
-              >
-                <Ionicons
-                  name={
-                    showPassword
-                      ? 'eye-off-outline'
-                      : 'eye-outline'
-                  }
-                  size={18}
-                  color={colors.textMuted}
-                />
-              </TouchableOpacity>
-            </View>
-          </View>
-
-          {/* Confirm Password */}
-          <View style={styles.inputGroup}>
-            <Text style={styles.label}>
-              Confirm Password
-            </Text>
-
-            <View style={styles.inputWrapper}>
-              <TextInput
-                style={styles.input}
-                placeholder="Confirm your password"
-                placeholderTextColor={colors.textMuted}
-                value={confirmPassword}
-                onChangeText={setConfirmPassword}
-                secureTextEntry={!showConfirmPassword}
-              />
-
-              <TouchableOpacity
-                onPress={() =>
-                  setShowConfirmPassword(
-                    !showConfirmPassword
-                  )
-                }
-                hitSlop={{
-                  top: 10,
-                  bottom: 10,
-                  left: 10,
-                  right: 10,
-                }}
-              >
-                <Ionicons
-                  name={
-                    showConfirmPassword
-                      ? 'eye-off-outline'
-                      : 'eye-outline'
-                  }
-                  size={18}
-                  color={colors.textMuted}
-                />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.passwordHint}>
-              Password must be at least 8 characters
-              with a mix of letters & numbers
-            </Text>
-          </View>
-
-          {/* Signup Button */}
-          <TouchableOpacity
-            style={[
-              styles.signupButton,
-              isLoading && styles.buttonDisabled,
-            ]}
-            onPress={handleSignup}
-            disabled={isLoading}
-            activeOpacity={0.85}
-          >
-            {isLoading ? (
-              <ActivityIndicator color={colors.white} />
-            ) : (
-              <Text style={styles.signupButtonText}>
-                Sign Up
-              </Text>
-            )}
-          </TouchableOpacity>
-
-          {/* Divider */}
-          <View style={styles.divider}>
-            <View style={styles.dividerLine} />
-
-            <Text style={styles.dividerText}>
-              Or sign up with
-            </Text>
-
-            <View style={styles.dividerLine} />
-          </View>
-
-          {/* Google */}
-          <TouchableOpacity
-            style={styles.socialButton}
-            activeOpacity={0.85}
-            onPress={() =>
-              Alert.alert(
-                'Coming Soon',
-                'Google sign in will be available soon!'
-              )
-            }
-          >
-            <Ionicons
-              name="logo-google"
-              size={20}
-              color="#DB4437"
+          <View style={styles.passwordWrapper}>
+            <TextInput
+              style={styles.passwordInput}
+              placeholder="Password (8 or more characters)"
+              placeholderTextColor={colors.textMuted}
+              value={password}
+              onChangeText={setPassword}
+              secureTextEntry={!showPassword}
             />
-
-            <Text style={styles.socialButtonText}>
-              Continue with Google
-            </Text>
-          </TouchableOpacity>
-
-          {/* Apple */}
-          <TouchableOpacity
-            style={styles.socialButton}
-            activeOpacity={0.85}
-            onPress={() =>
-              Alert.alert(
-                'Coming Soon',
-                'Apple sign in will be available soon!'
-              )
-            }
-          >
-            <Ionicons
-              name="logo-apple"
-              size={20}
-              color={colors.black}
-            />
-
-            <Text style={styles.socialButtonText}>
-              Continue with Apple
-            </Text>
-          </TouchableOpacity>
-
-          {/* Login Link */}
-          <View style={styles.loginRow}>
-            <Text style={styles.loginText}>
-              Already have an account?{' '}
-            </Text>
 
             <TouchableOpacity
-              onPress={() =>
-                navigation.navigate('Login')
-              }
+              onPress={() => setShowPassword(!showPassword)}
+              hitSlop={{
+                top: 10,
+                bottom: 10,
+                left: 10,
+                right: 10,
+              }}
             >
-              <Text style={styles.loginLink}>
-                Login
-              </Text>
+              <Ionicons
+                name={
+                  showPassword
+                    ? 'eye-off-outline'
+                    : 'eye-outline'
+                }
+                size={18}
+                color={colors.textMuted}
+              />
             </TouchableOpacity>
           </View>
+        </View>
+
+        {/* Country */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Country</Text>
+
+          <TouchableOpacity
+            style={styles.countryWrapper}
+            onPress={() =>
+              setShowCountryPicker(!showCountryPicker)
+            }
+          >
+            <Text style={styles.countryText}>{country}</Text>
+
+            <Ionicons
+              name={
+                showCountryPicker
+                  ? 'chevron-up'
+                  : 'chevron-down'
+              }
+              size={18}
+              color={colors.textMuted}
+            />
+          </TouchableOpacity>
+
+          {showCountryPicker && (
+            <View style={styles.pickerDropdown}>
+              {COUNTRIES.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={[
+                    styles.pickerItem,
+                    country === item &&
+                      styles.pickerItemActive,
+                  ]}
+                  onPress={() => {
+                    setCountry(item);
+                    setShowCountryPicker(false);
+                  }}
+                >
+                  <Text
+                    style={[
+                      styles.pickerItemText,
+                      country === item &&
+                        styles.pickerItemTextActive,
+                    ]}
+                  >
+                    {item}
+                  </Text>
+
+                  {country === item && (
+                    <Ionicons
+                      name="checkmark"
+                      size={16}
+                      color={colors.primary}
+                    />
+                  )}
+                </TouchableOpacity>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* Terms */}
+        <TouchableOpacity
+          style={styles.termsRow}
+          onPress={() =>
+            setAgreedToTerms(!agreedToTerms)
+          }
+          activeOpacity={0.7}
+        >
+          <View
+            style={[
+              styles.checkbox,
+              agreedToTerms &&
+                styles.checkboxActive,
+            ]}
+          >
+            {agreedToTerms && (
+              <Ionicons
+                name="checkmark"
+                size={12}
+                color={colors.white}
+              />
+            )}
+          </View>
+
+          <Text style={styles.termsText}>
+            Yes, I understand and agree to the{' '}
+            <Text style={styles.termsLink}>
+              Terms of Service
+            </Text>
+            , including the{' '}
+            <Text style={styles.termsLink}>
+              User Agreement
+            </Text>{' '}
+            and{' '}
+            <Text style={styles.termsLink}>
+              Privacy Policy
+            </Text>
+            .
+          </Text>
+        </TouchableOpacity>
+
+        {/* Create Account */}
+        <TouchableOpacity
+          style={[
+            styles.createButton,
+            isLoading &&
+              styles.buttonDisabled,
+          ]}
+          onPress={handleSignup}
+          disabled={isLoading}
+          activeOpacity={0.85}
+        >
+          {isLoading ? (
+            <ActivityIndicator
+              color={colors.white}
+            />
+          ) : (
+            <Text style={styles.createButtonText}>
+              Create my Account
+            </Text>
+          )}
+        </TouchableOpacity>
+
+        {/* Login */}
+        <View style={styles.loginRow}>
+          <Text style={styles.loginText}>
+            Already have an account?
+          </Text>
+
+          <TouchableOpacity
+            onPress={() =>
+              navigation.navigate('Login')
+            }
+          >
+            <Text style={styles.loginLink}>
+              Login
+            </Text>
+          </TouchableOpacity>
         </View>
 
         <View style={{ height: 40 }} />
@@ -348,109 +366,51 @@ const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: colors.background,
-    alignItems: 'center',
+    paddingHorizontal: 24,
+    paddingTop: 60,
   },
 
-  logoSection: {
-    alignItems: 'center',
-    paddingTop: 70,
-    paddingBottom: 24,
-  },
-
-  logoContainer: {
-    width: 100,
-    height: 100,
+  backButton: {
+    width: 40,
+    height: 40,
     justifyContent: 'center',
     alignItems: 'center',
-  },
-
-  card: {
-    width: width - 48,
-    backgroundColor: colors.white,
-    borderRadius: 20,
-    padding: 24,
-
-    shadowColor: colors.black,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-
-    shadowOpacity: 0.08,
-    shadowRadius: 16,
-    elevation: 4,
-  },
-
-  cardTitle: {
-    fontSize: typography.xl,
-    fontWeight: typography.bold,
-    color: colors.textPrimary,
-    marginBottom: 24,
-    textAlign: 'center',
-  },
-
-  inputGroup: {
     marginBottom: 16,
   },
 
-  label: {
-    fontSize: typography.sm,
-    fontWeight: typography.medium,
-    color: colors.textPrimary,
-    marginBottom: 8,
+  headerSection: {
+    alignItems: 'center',
+    marginBottom: 0,
   },
 
-  inputWrapper: {
+  logo: {
+    width: 120,
+    height: 120,
+    marginBottom: 12,
+  },
+
+  googleButton: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderBottomWidth: 1,
-    borderBottomColor: colors.border,
-    paddingBottom: 8,
+    justifyContent: 'center',
+    gap: 10,
+    height: 52,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+    marginBottom: 16,
   },
 
-  input: {
-    flex: 1,
+  socialIcon: {
+    width: 20,
+    height: 20,
+  },
+
+  googleButtonText: {
     fontSize: typography.md,
     color: colors.textPrimary,
-    paddingVertical: 4,
-  },
-
-  passwordHint: {
-    fontSize: typography.xs,
-    color: colors.textMuted,
-    marginTop: 6,
-    lineHeight: 16,
-  },
-
-  signupButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    height: 52,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
-    marginBottom: 20,
-
-    shadowColor: colors.primary,
-    shadowOffset: {
-      width: 0,
-      height: 4,
-    },
-
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
-
-  buttonDisabled: {
-    opacity: 0.7,
-  },
-
-  signupButtonText: {
-    fontSize: typography.md,
-    fontWeight: typography.bold,
-    color: colors.white,
-    letterSpacing: 0.5,
+    fontWeight: typography.medium,
   },
 
   divider: {
@@ -471,39 +431,158 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
 
-  socialButton: {
+  nameRow: {
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 10,
-    height: 50,
+    gap: 12,
+    marginBottom: 0,
+  },
+
+  inputGroup: {
+    marginBottom: 16,
+  },
+
+  label: {
+    fontSize: typography.sm,
+    fontWeight: typography.medium,
+    color: colors.textPrimary,
+    marginBottom: 8,
+  },
+
+  nameInput: {
+    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    marginBottom: 12,
-    backgroundColor: colors.white,
+    paddingHorizontal: 14,
+    height: 52,
   },
 
-  socialButtonText: {
-    fontSize: typography.md,
+  input: {
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    height: 52,
+  },
+
+  passwordWrapper: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    height: 52,
+  },
+
+  passwordInput: {
+    flex: 1,
+  },
+
+  countryWrapper: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    height: 52,
+  },
+
+  countryText: {
     color: colors.textPrimary,
-    fontWeight: typography.medium,
+  },
+
+  pickerDropdown: {
+    marginTop: 4,
+    backgroundColor: colors.white,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    overflow: 'hidden',
+  },
+
+  pickerItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    paddingHorizontal: 16,
+    paddingVertical: 12,
+  },
+
+  pickerItemActive: {
+    backgroundColor: colors.primaryLight,
+  },
+
+  pickerItemText: {
+    color: colors.textPrimary,
+  },
+
+  pickerItemTextActive: {
+    color: colors.primary,
+  },
+
+  termsRow: {
+    flexDirection: 'row',
+    gap: 10,
+    marginBottom: 24,
+  },
+
+  checkbox: {
+    width: 20,
+    height: 20,
+    borderWidth: 2,
+    borderRadius: 4,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+
+  checkboxActive: {
+    backgroundColor: colors.primary,
+    borderColor: colors.primary,
+  },
+
+  termsText: {
+    flex: 1,
+    color: colors.textSecondary,
+  },
+
+  termsLink: {
+    color: colors.primary,
+  },
+
+  createButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 16,
+  },
+
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+
+  createButtonText: {
+    color: colors.white,
+    fontWeight: typography.bold,
   },
 
   loginRow: {
     flexDirection: 'row',
     justifyContent: 'center',
-    alignItems: 'center',
-    marginTop: 8,
   },
 
   loginText: {
-    fontSize: typography.sm,
     color: colors.textSecondary,
   },
 
   loginLink: {
-    fontSize: typography.sm,
     color: colors.primary,
     fontWeight: typography.bold,
   },

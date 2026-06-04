@@ -36,9 +36,9 @@ const TransactionDetailScreen = ({ navigation, route }: Props) => {
     load();
   }, []);
 
-  const handleCopyId = () => {
-    Clipboard.setString(transaction?.transactionId || '');
-    Alert.alert('Copied!', 'Transaction ID copied to clipboard');
+  const handleCopy = (text: string, label: string) => {
+    Clipboard.setString(text);
+    Alert.alert('Copied!', `${label} copied to clipboard`);
   };
 
   if (isLoading) {
@@ -50,6 +50,9 @@ const TransactionDetailScreen = ({ navigation, route }: Props) => {
   }
 
   const isPaid = transaction?.status === 'paid';
+  const platformFee = 500;
+  const tax = Math.round(transaction?.grossPay * 0.05);
+  const youEarned = transaction?.grossPay - platformFee - tax;
 
   return (
     <View style={styles.container}>
@@ -59,9 +62,9 @@ const TransactionDetailScreen = ({ navigation, route }: Props) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={22} color={colors.white} />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Transaction Detail</Text>
+        <Text style={styles.headerTitle}>Payments Details</Text>
         <View style={{ width: 40 }} />
       </View>
 
@@ -69,95 +72,58 @@ const TransactionDetailScreen = ({ navigation, route }: Props) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Amount Card */}
-        <View style={styles.amountCard}>
-          <View style={[
-            styles.amountIconContainer,
-            { backgroundColor: isPaid ? colors.secondaryLight : '#FFF3E0' }
-          ]}>
-            <Ionicons
-              name={isPaid ? 'checkmark-circle' : 'time'}
-              size={40}
-              color={isPaid ? colors.success : colors.warning}
-            />
-          </View>
-          <Text style={styles.amountLabel}>Total Amount</Text>
-          <Text style={styles.amountValue}>
-            ₦{transaction?.grossPay?.toLocaleString()}
-          </Text>
-          <View style={[
-            styles.statusBadge,
-            { backgroundColor: isPaid ? colors.secondaryLight : '#FFF3E0' }
-          ]}>
-            <Text style={[
-              styles.statusText,
-              { color: isPaid ? colors.success : colors.warning }
+        {/* Status + Facility */}
+        <View style={styles.facilityCard}>
+          <View style={styles.facilityTop}>
+            <View style={[
+              styles.statusBadge,
+              { backgroundColor: isPaid ? colors.secondaryLight : '#FFF3E0' }
             ]}>
-              {isPaid ? 'Payment Confirmed' : 'Payment Pending'}
-            </Text>
+              <Text style={[
+                styles.statusText,
+                { color: isPaid ? colors.success : colors.warning }
+              ]}>
+                {isPaid ? 'Paid' : 'Pending'}
+              </Text>
+            </View>
           </View>
-        </View>
+          <View style={styles.facilityInfo}>
+            <View style={styles.facilityIconContainer}>
+              <Ionicons name="add" size={24} color={colors.white} />
+            </View>
+            <View>
+              <Text style={styles.facilityName}>{transaction?.facility}</Text>
+              <Text style={styles.roleText}>{transaction?.shiftTitle}</Text>
+              <Text style={styles.dateText}>
+                {transaction?.date} · {transaction?.startTime} - {transaction?.endTime}
+              </Text>
+            </View>
+          </View>
 
-        {/* Transaction ID */}
-        <View style={styles.transactionIdCard}>
-          <View style={styles.transactionIdLeft}>
-            <Text style={styles.transactionIdLabel}>Transaction ID</Text>
-            <Text style={styles.transactionIdValue}>
-              {transaction?.transactionId}
+          {/* Amount */}
+          <View style={styles.amountRow}>
+            <Text style={styles.amount}>
+              ₦{transaction?.grossPay?.toLocaleString()}
             </Text>
+            <View style={styles.paidConfirm}>
+              {isPaid && (
+                <Ionicons name="checkmark-circle" size={24} color={colors.success} />
+              )}
+            </View>
           </View>
-          <TouchableOpacity
-            style={styles.copyButton}
-            onPress={handleCopyId}
-          >
-            <Ionicons name="copy-outline" size={20} color={colors.primary} />
-          </TouchableOpacity>
-        </View>
 
-        {/* Shift Details */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Shift Details</Text>
-          <View style={styles.infoCard}>
-            {[
-              {
-                icon: 'briefcase-outline',
-                label: 'Shift Title',
-                value: transaction?.shiftTitle,
-              },
-              {
-                icon: 'business-outline',
-                label: 'Facility',
-                value: transaction?.facility,
-              },
-              {
-                icon: 'calendar-outline',
-                label: 'Date',
-                value: transaction?.date,
-              },
-              {
-                icon: 'time-outline',
-                label: 'Time',
-                value: `${transaction?.startTime} - ${transaction?.endTime}`,
-              },
-            ].map((item, index) => (
-              <View key={index}>
-                <View style={styles.infoRow}>
-                  <View style={styles.infoIconContainer}>
-                    <Ionicons
-                      name={item.icon as any}
-                      size={18}
-                      color={colors.primary}
-                    />
-                  </View>
-                  <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>{item.label}</Text>
-                    <Text style={styles.infoValue}>{item.value}</Text>
-                  </View>
-                </View>
-                {index < 3 && <View style={styles.infoDivider} />}
-              </View>
-            ))}
-          </View>
+          {isPaid && (
+            <Text style={styles.paidDate}>
+              Paid on {new Date(transaction?.paidAt).toLocaleDateString('en-NG', {
+                day: 'numeric',
+                month: 'long',
+                year: 'numeric',
+              })}, {new Date(transaction?.paidAt).toLocaleTimeString('en-NG', {
+                hour: '2-digit',
+                minute: '2-digit',
+              })}
+            </Text>
+          )}
         </View>
 
         {/* Payment Breakdown */}
@@ -165,72 +131,97 @@ const TransactionDetailScreen = ({ navigation, route }: Props) => {
           <Text style={styles.sectionTitle}>Payment Breakdown</Text>
           <View style={styles.breakdownCard}>
             <View style={styles.breakdownRow}>
-              <Text style={styles.breakdownLabel}>Scheduled Hours</Text>
+              <Text style={styles.breakdownLabel}>
+                Base Pay ({transaction?.scheduledHours} hrs)
+              </Text>
               <Text style={styles.breakdownValue}>
-                {transaction?.scheduledHours} hrs
+                {transaction?.grossPay?.toLocaleString()}
               </Text>
             </View>
-            <View style={styles.breakdownDivider} />
-            <View style={styles.breakdownRow}>
-              <Text style={styles.breakdownLabel}>Hours Worked</Text>
-              <Text style={styles.breakdownValue}>
-                {transaction?.hoursWorked} hrs
-              </Text>
-            </View>
-            <View style={styles.breakdownDivider} />
             <View style={styles.breakdownRow}>
               <Text style={styles.breakdownLabel}>Hourly Rate</Text>
               <Text style={styles.breakdownValue}>
-                ₦{transaction?.hourlyRate?.toLocaleString()}/hr
+                ₦{transaction?.hourlyRate?.toLocaleString()} / hr
+              </Text>
+            </View>
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>Platform Fee</Text>
+              <Text style={[styles.breakdownValue, { color: colors.error }]}>
+                - ₦{platformFee.toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>Tax (5%)</Text>
+              <Text style={[styles.breakdownValue, { color: colors.error }]}>
+                - ₦{tax.toLocaleString()}
               </Text>
             </View>
             <View style={styles.breakdownDivider} />
             <View style={styles.breakdownRow}>
-              <Text style={styles.breakdownLabel}>Payment Status</Text>
-              <Text style={[
-                styles.breakdownValue,
-                { color: isPaid ? colors.success : colors.warning }
-              ]}>
-                {isPaid ? 'Paid' : 'Pending'}
-              </Text>
-            </View>
-            {isPaid && (
-              <>
-                <View style={styles.breakdownDivider} />
-                <View style={styles.breakdownRow}>
-                  <Text style={styles.breakdownLabel}>Paid On</Text>
-                  <Text style={styles.breakdownValue}>
-                    {new Date(transaction?.paidAt).toLocaleDateString('en-NG', {
-                      day: 'numeric',
-                      month: 'long',
-                      year: 'numeric',
-                    })}
-                  </Text>
-                </View>
-              </>
-            )}
-
-            {/* Total */}
-            <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Total Pay</Text>
-              <Text style={styles.totalValue}>
-                ₦{transaction?.grossPay?.toLocaleString()}
+              <Text style={styles.youEarnedLabel}>You Earned</Text>
+              <Text style={styles.youEarnedValue}>
+                ₦{youEarned?.toLocaleString()}
               </Text>
             </View>
           </View>
         </View>
 
-        {/* Note for pending */}
+        {/* Payment Method */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Payment Method</Text>
+          <View style={styles.methodCard}>
+            <View style={styles.methodLeft}>
+              <View style={styles.methodIconContainer}>
+                <Ionicons name="phone-portrait-outline" size={20} color={colors.primary} />
+              </View>
+              <Text style={styles.methodText}>805*****76</Text>
+            </View>
+
+            <View style={styles.methodDetails}>
+              <View style={styles.methodRow}>
+                <Text style={styles.methodLabel}>Transaction ID</Text>
+                <View style={styles.methodValueRow}>
+                  <Text style={styles.methodValue}>
+                    {transaction?.transactionId}
+                  </Text>
+                  <TouchableOpacity
+                    onPress={() => handleCopy(transaction?.transactionId, 'Transaction ID')}
+                  >
+                    <Ionicons name="copy-outline" size={16} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+              <View style={styles.methodDivider} />
+              <View style={styles.methodRow}>
+                <Text style={styles.methodLabel}>Payment Reference</Text>
+                <View style={styles.methodValueRow}>
+                  <Text style={styles.methodValue}>PAY_20260520</Text>
+                  <TouchableOpacity
+                    onPress={() => handleCopy('PAY_20260520', 'Payment Reference')}
+                  >
+                    <Ionicons name="copy-outline" size={16} color={colors.primary} />
+                  </TouchableOpacity>
+                </View>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        {/* Help */}
+        <TouchableOpacity style={styles.helpCard}>
+          <Text style={styles.helpText}>Need help with this payment?</Text>
+          <View style={styles.helpRight}>
+            <Text style={styles.helpLink}>Contact Support</Text>
+            <Ionicons name="chevron-forward" size={16} color={colors.primary} />
+          </View>
+        </TouchableOpacity>
+
+        {/* Pending Notice */}
         {!isPaid && (
           <View style={styles.noticeCard}>
-            <Ionicons
-              name="information-circle-outline"
-              size={20}
-              color={colors.warning}
-            />
+            <Ionicons name="information-circle-outline" size={18} color={colors.warning} />
             <Text style={styles.noticeText}>
-              Payment is currently being processed. You will receive a
-              notification once it has been released to your account.
+              Payment is being processed. You will be notified once released.
             </Text>
           </View>
         )}
@@ -252,148 +243,108 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: colors.primary,
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: colors.background,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: typography.lg,
     fontWeight: typography.bold,
-    color: colors.white,
+    color: colors.textPrimary,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: 16,
   },
-  amountCard: {
+  facilityCard: {
     backgroundColor: colors.white,
-    borderRadius: 20,
-    padding: 24,
-    alignItems: 'center',
+    borderRadius: 16,
+    padding: 16,
     marginBottom: 16,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  amountIconContainer: {
-    width: 80,
-    height: 80,
-    borderRadius: 40,
-    justifyContent: 'center',
-    alignItems: 'center',
-    marginBottom: 16,
-  },
-  amountLabel: {
-    fontSize: typography.sm,
-    color: colors.textSecondary,
-    marginBottom: 8,
-  },
-  amountValue: {
-    fontSize: 36,
-    fontWeight: typography.bold,
-    color: colors.textPrimary,
+  facilityTop: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
     marginBottom: 12,
   },
   statusBadge: {
-    paddingHorizontal: 16,
-    paddingVertical: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 4,
     borderRadius: 20,
   },
   statusText: {
     fontSize: typography.sm,
     fontWeight: typography.bold,
   },
-  transactionIdCard: {
+  facilityInfo: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 16,
-    marginBottom: 24,
-    borderWidth: 1,
-    borderColor: colors.border,
+    gap: 12,
+    marginBottom: 16,
   },
-  transactionIdLeft: {
-    flex: 1,
-  },
-  transactionIdLabel: {
-    fontSize: typography.xs,
-    color: colors.textMuted,
-    marginBottom: 4,
-  },
-  transactionIdValue: {
-    fontSize: typography.md,
-    fontWeight: typography.semiBold,
-    color: colors.textPrimary,
-  },
-  copyButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
-    backgroundColor: colors.primaryLight,
+  facilityIconContainer: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
+  facilityName: {
+    fontSize: typography.md,
+    fontWeight: typography.bold,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  roleText: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  dateText: {
+    fontSize: typography.xs,
+    color: colors.textMuted,
+  },
+  amountRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  amount: {
+    fontSize: 32,
+    fontWeight: typography.bold,
+    color: colors.textPrimary,
+  },
+  paidConfirm: {
+    width: 40,
+    height: 40,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  paidDate: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+  },
   section: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: typography.md,
     fontWeight: typography.bold,
     color: colors.textPrimary,
-    marginBottom: 12,
-  },
-  infoCard: {
-    backgroundColor: colors.white,
-    borderRadius: 16,
-    padding: 16,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 14,
-    paddingVertical: 8,
-  },
-  infoIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  infoTextContainer: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: typography.xs,
-    color: colors.textMuted,
-    marginBottom: 2,
-  },
-  infoValue: {
-    fontSize: typography.md,
-    fontWeight: typography.medium,
-    color: colors.textPrimary,
-  },
-  infoDivider: {
-    height: 1,
-    backgroundColor: colors.borderLight,
+    marginBottom: 10,
   },
   breakdownCard: {
     backgroundColor: colors.white,
@@ -406,7 +357,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    paddingVertical: 12,
+    paddingVertical: 8,
   },
   breakdownLabel: {
     fontSize: typography.md,
@@ -414,39 +365,112 @@ const styles = StyleSheet.create({
   },
   breakdownValue: {
     fontSize: typography.md,
-    fontWeight: typography.semiBold,
     color: colors.textPrimary,
+    fontWeight: typography.medium,
   },
   breakdownDivider: {
     height: 1,
-    backgroundColor: colors.borderLight,
+    backgroundColor: colors.border,
+    marginVertical: 4,
   },
-  totalRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingTop: 16,
-    marginTop: 4,
-    borderTopWidth: 2,
-    borderTopColor: colors.primary,
-  },
-  totalLabel: {
-    fontSize: typography.lg,
+  youEarnedLabel: {
+    fontSize: typography.md,
     fontWeight: typography.bold,
     color: colors.textPrimary,
   },
-  totalValue: {
-    fontSize: typography.xl,
+  youEarnedValue: {
+    fontSize: typography.md,
     fontWeight: typography.bold,
     color: colors.primary,
   },
+  methodCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  methodLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    marginBottom: 16,
+    paddingBottom: 16,
+    borderBottomWidth: 1,
+    borderBottomColor: colors.borderLight,
+  },
+  methodIconContainer: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: colors.primaryLight,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  methodText: {
+    fontSize: typography.md,
+    fontWeight: typography.semiBold,
+    color: colors.textPrimary,
+  },
+  methodDetails: {
+    gap: 4,
+  },
+  methodRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  methodLabel: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+  },
+  methodValueRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  methodValue: {
+    fontSize: typography.sm,
+    fontWeight: typography.medium,
+    color: colors.textPrimary,
+  },
+  methodDivider: {
+    height: 1,
+    backgroundColor: colors.borderLight,
+  },
+  helpCard: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  helpText: {
+    fontSize: typography.md,
+    color: colors.textPrimary,
+  },
+  helpRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  helpLink: {
+    fontSize: typography.sm,
+    color: colors.primary,
+    fontWeight: typography.medium,
+  },
   noticeCard: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
     backgroundColor: '#FFF3E0',
     borderRadius: 12,
     padding: 14,
-    gap: 10,
-    alignItems: 'flex-start',
   },
   noticeText: {
     flex: 1,

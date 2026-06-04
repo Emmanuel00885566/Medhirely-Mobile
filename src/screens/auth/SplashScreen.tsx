@@ -7,7 +7,6 @@ import {
   Dimensions,
 } from 'react-native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
-import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AuthStack';
@@ -16,7 +15,7 @@ type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'Splash'>;
 };
 
-const { width, height } = Dimensions.get('window');
+const { width } = Dimensions.get('window');
 
 const SplashScreen = ({ navigation }: Props) => {
   const logoScale = new Animated.Value(0);
@@ -25,7 +24,6 @@ const SplashScreen = ({ navigation }: Props) => {
   const taglineOpacity = new Animated.Value(0);
 
   useEffect(() => {
-    // Animate logo in
     Animated.sequence([
       Animated.parallel([
         Animated.spring(logoScale, {
@@ -40,13 +38,11 @@ const SplashScreen = ({ navigation }: Props) => {
           useNativeDriver: true,
         }),
       ]),
-      // Animate brand name in
       Animated.timing(textOpacity, {
         toValue: 1,
         duration: 400,
         useNativeDriver: true,
       }),
-      // Animate tagline in
       Animated.timing(taglineOpacity, {
         toValue: 1,
         duration: 400,
@@ -54,7 +50,6 @@ const SplashScreen = ({ navigation }: Props) => {
       }),
     ]).start();
 
-    // Navigate to onboarding after 3 seconds
     const timer = setTimeout(() => {
       navigation.replace('Onboarding');
     }, 3000);
@@ -64,37 +59,31 @@ const SplashScreen = ({ navigation }: Props) => {
 
   return (
     <View style={styles.container}>
-      {/* Background circles for design */}
+      {/* Subtle background circles for depth */}
       <View style={styles.circleTop} />
       <View style={styles.circleBottom} />
 
-      {/* Logo */}
-      <Animated.View
+      {/* Logo image */}
+      <Animated.Image
+        source={require('../../assets/logo.png')}
         style={[
-          styles.logoContainer,
+          styles.logo,
           {
             opacity: logoOpacity,
             transform: [{ scale: logoScale }],
           },
         ]}
-      >
-        <Ionicons name="medical" size={60} color={colors.white} />
-      </Animated.View>
-
-      {/* Brand Name */}
-      <Animated.Text style={[styles.brandName, { opacity: textOpacity }]}>
-        MedHirely
-      </Animated.Text>
+        resizeMode="contain"
+      />
 
       {/* Tagline */}
       <Animated.Text style={[styles.tagline, { opacity: taglineOpacity }]}>
-        Healthcare shifts, simplified.
+        Connecting Healthcare Professionals to Opportunities
       </Animated.Text>
 
       {/* Bottom text */}
       <View style={styles.bottomContainer}>
-        <Text style={styles.bottomText}>Connecting healthcare workers</Text>
-        <Text style={styles.bottomText}>with opportunities that matter.</Text>
+        <Text style={styles.bottomText}>Version 1.0</Text>
       </View>
     </View>
   );
@@ -103,59 +92,60 @@ const SplashScreen = ({ navigation }: Props) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.primary,
+    backgroundColor: colors.background,
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   circleTop: {
     position: 'absolute',
     width: width * 0.8,
     height: width * 0.8,
     borderRadius: width * 0.4,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: colors.primaryLight,
     top: -width * 0.2,
     right: -width * 0.2,
   },
+
   circleBottom: {
     position: 'absolute',
     width: width * 0.7,
     height: width * 0.7,
     borderRadius: width * 0.35,
-    backgroundColor: 'rgba(255,255,255,0.05)',
+    backgroundColor: colors.primaryLight,
     bottom: -width * 0.15,
     left: -width * 0.15,
   },
-  logoContainer: {
-    width: 110,
-    height: 110,
-    borderRadius: 55,
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    justifyContent: 'center',
-    alignItems: 'center',
+
+  logo: {
+    width: 400,
+    height: 400,
     marginBottom: 24,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
   },
+
   brandName: {
     fontSize: typography.xxxl,
     fontWeight: typography.bold,
-    color: colors.white,
+    color: colors.textPrimary,
     letterSpacing: 2,
     marginBottom: 8,
   },
+
   tagline: {
     fontSize: typography.md,
-    color: 'rgba(255,255,255,0.8)',
+    color: colors.textSecondary,
     letterSpacing: 0.5,
   },
+
   bottomContainer: {
     position: 'absolute',
     bottom: 50,
     alignItems: 'center',
   },
+
   bottomText: {
     fontSize: typography.sm,
-    color: 'rgba(255,255,255,0.5)',
+    color: colors.textMuted,
     lineHeight: 20,
   },
 });

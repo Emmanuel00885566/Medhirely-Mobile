@@ -63,6 +63,11 @@ const ShiftSummaryScreen = ({ navigation, route }: Props) => {
   }
 
   const shift = application?.shift;
+  const basePay = shift?.pay || 45000;
+  const hourlyRate = 3750;
+  const platformFee = 500;
+  const tax = Math.round(basePay * 0.05);
+  const youEarned = basePay - platformFee - tax;
 
   return (
     <View style={styles.container}>
@@ -72,112 +77,99 @@ const ShiftSummaryScreen = ({ navigation, route }: Props) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={22} color={colors.white} />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Shift Summary</Text>
-        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
       >
-        {/* Completed Banner */}
-        <View style={styles.completedBanner}>
-          <Ionicons name="checkmark-circle" size={24} color={colors.primary} />
-          <Text style={styles.completedBannerText}>Shift Completed!</Text>
-        </View>
-
-        {/* Facility Card */}
+        {/* Facility Info */}
         <View style={styles.facilityCard}>
           <View style={styles.facilityIconContainer}>
-            <Ionicons name="business" size={32} color={colors.primary} />
+            <Ionicons name="add" size={28} color={colors.white} />
           </View>
           <View style={styles.facilityInfo}>
-            <Text style={styles.shiftTitle}>{shift?.title}</Text>
             <Text style={styles.facilityName}>{shift?.facility}</Text>
-            <View style={styles.locationRow}>
-              <Ionicons name="location-outline" size={14} color={colors.textMuted} />
-              <Text style={styles.locationText}>{shift?.location}</Text>
+            <Text style={styles.specialtyText}>{shift?.title}</Text>
+            <View style={styles.ratingRow}>
+              <Ionicons name="star" size={14} color="#FFD700" />
+              <Text style={styles.ratingText}>4.5 (21 reviews)</Text>
             </View>
           </View>
         </View>
 
-        {/* Earnings Summary */}
-        <View style={styles.earningsCard}>
-          <Text style={styles.earningsTitle}>Earnings Summary</Text>
-          <View style={styles.earningsRow}>
-            <View style={styles.earningsItem}>
-              <Text style={styles.earningsValue}>
-                ₦{shift?.pay?.toLocaleString()}
-              </Text>
-              <Text style={styles.earningsLabel}>Total Earned</Text>
-            </View>
-            <View style={styles.earningsDivider} />
-            <View style={styles.earningsItem}>
-              <Text style={styles.earningsValue}>{shift?.date}</Text>
-              <Text style={styles.earningsLabel}>Shift Date</Text>
-            </View>
-            <View style={styles.earningsDivider} />
-            <View style={styles.earningsItem}>
-              <Text style={styles.earningsValue}>Pending</Text>
-              <Text style={styles.earningsLabel}>Payment</Text>
-            </View>
-          </View>
-        </View>
-
-        {/* Shift Details */}
+        {/* Shift Detail */}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Shift Details</Text>
-          <View style={styles.infoCard}>
-            {[
-              { icon: 'calendar-outline', label: 'Date', value: shift?.date },
-              {
-                icon: 'time-outline',
-                label: 'Time',
-                value: `${shift?.startTime} - ${shift?.endTime}`,
-              },
-              {
-                icon: 'location-outline',
-                label: 'Location',
-                value: shift?.location,
-              },
-              {
-                icon: 'cash-outline',
-                label: 'Pay',
-                value: `₦${shift?.pay?.toLocaleString()}`,
-              },
-            ].map((item, index) => (
-              <View key={index}>
-                <View style={styles.infoRow}>
-                  <View style={styles.infoIconContainer}>
-                    <Ionicons
-                      name={item.icon as any}
-                      size={18}
-                      color={colors.primary}
-                    />
-                  </View>
-                  <View style={styles.infoTextContainer}>
-                    <Text style={styles.infoLabel}>{item.label}</Text>
-                    <Text style={styles.infoValue}>{item.value}</Text>
-                  </View>
-                </View>
-                {index < 3 && <View style={styles.infoDivider} />}
-              </View>
-            ))}
+          <Text style={styles.sectionTitle}>Shift Detail</Text>
+          <View style={styles.detailCard}>
+            <View style={styles.detailRow}>
+              <Ionicons name="calendar-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>{shift?.date}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="time-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>
+                {shift?.startTime} - {shift?.endTime}
+              </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="location-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>{shift?.address}</Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="cash-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>
+                ₦{basePay.toLocaleString()}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Rating Section */}
+        {/* Payment Breakdown */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Payment Breakdown</Text>
+          <View style={styles.breakdownCard}>
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>Base Pay (12 hrs)</Text>
+              <Text style={styles.breakdownValue}>
+                {basePay.toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>Hourly Rate</Text>
+              <Text style={styles.breakdownValue}>
+                ₦{hourlyRate.toLocaleString()} / hr
+              </Text>
+            </View>
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>Platform Fee</Text>
+              <Text style={[styles.breakdownValue, { color: colors.error }]}>
+                - ₦{platformFee.toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.breakdownRow}>
+              <Text style={styles.breakdownLabel}>Tax (5%)</Text>
+              <Text style={[styles.breakdownValue, { color: colors.error }]}>
+                - ₦{tax.toLocaleString()}
+              </Text>
+            </View>
+            <View style={styles.breakdownDivider} />
+            <View style={styles.breakdownRow}>
+              <Text style={styles.youEarnedLabel}>You Earned</Text>
+              <Text style={styles.youEarnedValue}>
+                ₦{youEarned.toLocaleString()}
+              </Text>
+            </View>
+          </View>
+        </View>
+
+        {/* Rate this Facility */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Rate this Facility</Text>
           {!reviewSubmitted ? (
             <View style={styles.ratingCard}>
-              <Text style={styles.ratingQuestion}>
-                How was your experience at {shift?.facility}?
-              </Text>
-
-              {/* Stars */}
               <View style={styles.starsContainer}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <TouchableOpacity
@@ -187,7 +179,7 @@ const ShiftSummaryScreen = ({ navigation, route }: Props) => {
                   >
                     <Ionicons
                       name={star <= rating ? 'star' : 'star-outline'}
-                      size={40}
+                      size={36}
                       color={star <= rating ? '#FFD700' : colors.border}
                     />
                   </TouchableOpacity>
@@ -204,19 +196,17 @@ const ShiftSummaryScreen = ({ navigation, route }: Props) => {
                 </Text>
               )}
 
-              {/* Review Text */}
               <TextInput
                 style={styles.reviewInput}
-                placeholder="Leave an optional review about your experience..."
+                placeholder="Leave an optional review..."
                 placeholderTextColor={colors.textMuted}
                 value={review}
                 onChangeText={setReview}
                 multiline
-                numberOfLines={4}
+                numberOfLines={3}
                 textAlignVertical="top"
               />
 
-              {/* Submit */}
               <TouchableOpacity
                 style={[
                   styles.submitButton,
@@ -234,24 +224,15 @@ const ShiftSummaryScreen = ({ navigation, route }: Props) => {
               </TouchableOpacity>
             </View>
           ) : (
-            // ✅ Review submitted state
             <View style={styles.reviewSuccessCard}>
-              <Ionicons
-                name="checkmark-circle"
-                size={48}
-                color={colors.success}
-              />
+              <Ionicons name="checkmark-circle" size={48} color={colors.success} />
               <Text style={styles.reviewSuccessTitle}>Review Submitted!</Text>
-              <Text style={styles.reviewSuccessText}>
-                Thank you for your feedback. It helps facilities improve their
-                working conditions.
-              </Text>
               <View style={styles.starsRow}>
                 {[1, 2, 3, 4, 5].map((star) => (
                   <Ionicons
                     key={star}
                     name={star <= rating ? 'star' : 'star-outline'}
-                    size={24}
+                    size={20}
                     color={star <= rating ? '#FFD700' : colors.border}
                   />
                 ))}
@@ -277,172 +258,126 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   header: {
-    backgroundColor: colors.primary,
     paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    paddingHorizontal: 16,
+    paddingBottom: 8,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
-  headerTitle: {
-    fontSize: typography.lg,
-    fontWeight: typography.bold,
-    color: colors.white,
-  },
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
-  },
-  completedBanner: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 10,
-    backgroundColor: colors.primaryLight,
-    borderRadius: 12,
-    padding: 14,
-    marginBottom: 16,
-  },
-  completedBannerText: {
-    fontSize: typography.sm,
-    color: colors.primary,
-    fontWeight: typography.semiBold,
+    paddingHorizontal: 16,
+    paddingTop: 8,
   },
   facilityCard: {
     flexDirection: 'row',
-    gap: 16,
+    alignItems: 'flex-start',
+    gap: 12,
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 16,
+    marginBottom: 20,
     borderWidth: 1,
     borderColor: colors.border,
-    alignItems: 'center',
   },
   facilityIconContainer: {
-    width: 64,
-    height: 64,
-    borderRadius: 32,
-    backgroundColor: colors.primaryLight,
+    width: 48,
+    height: 48,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
   facilityInfo: {
     flex: 1,
   },
-  shiftTitle: {
-    fontSize: typography.lg,
+  facilityName: {
+    fontSize: typography.md,
     fontWeight: typography.bold,
     color: colors.textPrimary,
     marginBottom: 4,
   },
-  facilityName: {
-    fontSize: typography.md,
+  specialtyText: {
+    fontSize: typography.sm,
     color: colors.textSecondary,
-    marginBottom: 6,
+    marginBottom: 4,
   },
-  locationRow: {
+  ratingRow: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 4,
   },
-  locationText: {
+  ratingText: {
     fontSize: typography.sm,
-    color: colors.textMuted,
-  },
-  earningsCard: {
-    backgroundColor: colors.primary,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
-  },
-  earningsTitle: {
-    fontSize: typography.md,
-    fontWeight: typography.bold,
-    color: colors.white,
-    marginBottom: 16,
-    textAlign: 'center',
-  },
-  earningsRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-  },
-  earningsItem: {
-    flex: 1,
-    alignItems: 'center',
-  },
-  earningsValue: {
-    fontSize: typography.md,
-    fontWeight: typography.bold,
-    color: colors.white,
-    marginBottom: 4,
-  },
-  earningsLabel: {
-    fontSize: typography.xs,
-    color: 'rgba(255,255,255,0.7)',
-  },
-  earningsDivider: {
-    width: 1,
-    height: 40,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+    color: colors.textSecondary,
   },
   section: {
-    marginBottom: 24,
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: typography.md,
     fontWeight: typography.bold,
     color: colors.textPrimary,
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  infoCard: {
+  detailCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+    gap: 14,
+  },
+  detailRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 12,
+  },
+  detailText: {
+    fontSize: typography.md,
+    color: colors.textPrimary,
+    flex: 1,
+    lineHeight: 22,
+  },
+  breakdownCard: {
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
     borderWidth: 1,
     borderColor: colors.border,
   },
-  infoRow: {
+  breakdownRow: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
     alignItems: 'center',
-    gap: 14,
     paddingVertical: 8,
   },
-  infoIconContainer: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
-    backgroundColor: colors.primaryLight,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  infoTextContainer: {
-    flex: 1,
-  },
-  infoLabel: {
-    fontSize: typography.xs,
-    color: colors.textMuted,
-    marginBottom: 2,
-  },
-  infoValue: {
+  breakdownLabel: {
     fontSize: typography.md,
+    color: colors.textSecondary,
+  },
+  breakdownValue: {
+    fontSize: typography.md,
+    color: colors.textPrimary,
     fontWeight: typography.medium,
+  },
+  breakdownDivider: {
+    height: 1,
+    backgroundColor: colors.border,
+    marginVertical: 4,
+  },
+  youEarnedLabel: {
+    fontSize: typography.md,
+    fontWeight: typography.bold,
     color: colors.textPrimary,
   },
-  infoDivider: {
-    height: 1,
-    backgroundColor: colors.borderLight,
+  youEarnedValue: {
+    fontSize: typography.md,
+    fontWeight: typography.bold,
+    color: colors.primary,
   },
   ratingCard: {
     backgroundColor: colors.white,
@@ -451,13 +386,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     alignItems: 'center',
-  },
-  ratingQuestion: {
-    fontSize: typography.md,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    marginBottom: 20,
-    lineHeight: 22,
   },
   starsContainer: {
     flexDirection: 'row',
@@ -479,7 +407,7 @@ const styles = StyleSheet.create({
     padding: 14,
     fontSize: typography.md,
     color: colors.textPrimary,
-    minHeight: 100,
+    minHeight: 80,
     marginBottom: 16,
   },
   submitButton: {
@@ -516,12 +444,6 @@ const styles = StyleSheet.create({
     fontSize: typography.xl,
     fontWeight: typography.bold,
     color: colors.textPrimary,
-  },
-  reviewSuccessText: {
-    fontSize: typography.md,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 22,
   },
   starsRow: {
     flexDirection: 'row',
