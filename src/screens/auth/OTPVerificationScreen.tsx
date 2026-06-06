@@ -15,7 +15,6 @@ import { RouteProp } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AuthStack';
-import { useAuth } from '../../context/AuthContext';
 import { authService } from '../../services/auth';
 
 type Props = {
@@ -23,13 +22,11 @@ type Props = {
   route: RouteProp<AuthStackParamList, 'OTPVerification'>;
 };
 
-const MOCK_OTP = '123456';
 const OTP_LENGTH = 6;
 const RESEND_COUNTDOWN = 60;
 
 const OTPVerificationScreen = ({ navigation, route }: Props) => {
-  const { email } = route.params;
-  const { signup } = useAuth();
+  const { email, type } = route.params;
   const [otp, setOtp] = useState(['', '', '', '', '', '']);
   const [isVerifying, setIsVerifying] = useState(false);
   const [isResending, setIsResending] = useState(false);
@@ -37,7 +34,6 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef<(TextInput | null)[]>([]);
 
-  // Countdown timer
   useEffect(() => {
     if (countdown > 0) {
       const timer = setTimeout(() => setCountdown(countdown - 1), 1000);
@@ -48,7 +44,6 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
   }, [countdown]);
 
   const handleOtpChange = (value: string, index: number) => {
-    // Only allow numbers
     if (value && !/^\d+$/.test(value)) return;
 
     const newOtp = [...otp];
@@ -67,7 +62,6 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
     newOtp[index] = value;
     setOtp(newOtp);
 
-    // Auto focus next input
     if (value && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
     }
@@ -82,7 +76,7 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
   const handleVerify = async () => {
     const otpString = otp.join('');
     if (otpString.length < OTP_LENGTH) {
-      Alert.alert('Error', 'Please enter the complete 6-digit OTP');
+      Alert.alert('Error', 'Please enter the complete 6-digit code');
       return;
     }
 
@@ -90,20 +84,25 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
     Keyboard.dismiss();
 
     try {
-  await authService.verifyEmail(email, otpString);
-  Alert.alert(
-    'Email Verified! ✅',
-    'Your email has been verified successfully. Please sign in to continue.',
-    [{ text: 'Sign In', onPress: () => navigation.navigate('Login') }]
-  );
-} catch (error: any) {
-  setOtp(['', '', '', '', '', '']);
-  inputRefs.current[0]?.focus();
-  Alert.alert(
-    'Invalid OTP',
-    error?.response?.data?.message || 'The code you entered is incorrect. Please try again.'
-  );
-} finally {
+      console.log('Verifying OTP:', { email, otp: otpString });
+      const response = await authService.verifyEmail(email, otpString);
+      console.log('Verify success:', response);
+
+      Alert.alert(
+        'Email Verified! ✅',
+        'Your email has been verified successfully. Please sign in to continue.',
+        [{ text: 'Sign In', onPress: () => navigation.navigate('Login') }]
+      );
+    } catch (error: any) {
+      console.log('Verify error:', error?.response?.data);
+      console.log('Verify error status:', error?.response?.status);
+      setOtp(['', '', '', '', '', '']);
+      inputRefs.current[0]?.focus();
+      Alert.alert(
+        'Invalid Code',
+        error?.response?.data?.message || 'The code you entered is incorrect. Please try again.'
+      );
+    } finally {
       setIsVerifying(false);
     }
   };
@@ -117,13 +116,20 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
       setCountdown(RESEND_COUNTDOWN);
       setCanResend(false);
       inputRefs.current[0]?.focus();
-      Alert.alert('OTP Sent!', `A new verification code has been sent to ${email}`);
+      Alert.alert('Code Sent!', `A new verification code has been sent to ${email}`);
+    } catch (error: any) {
+      Alert.alert('Error', error?.response?.data?.message || 'Failed to resend code. Please try again.');
     } finally {
       setIsResending(false);
     }
   };
 
   const isOtpComplete = otp.every((digit) => digit !== '');
+
+  const maskedEmail = email.replace(
+    /^(.{2})(.*)(@.*)$/,
+    (_, a, b, c) => a + '*'.repeat(b.length) + c
+  );
 
   return (
     <View style={styles.container}>
@@ -135,30 +141,26 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
         >
           <Ionicons name="arrow-back" size={22} color={colors.white} />
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Verify Email</Text>
+        <Text style={styles.headerTitle}>
+          {type === 'signup' ? 'Verify Email' : 'Reset Password'}
+        </Text>
         <View style={{ width: 40 }} />
       </View>
 
       <View style={styles.content}>
         {/* Icon */}
         <View style={styles.iconContainer}>
-          <Ionicons name="mail" size={48} color={colors.primary} />
+          <Ionicons name="mail-open-outline" size={48} color={colors.primary} />
         </View>
 
         {/* Title */}
         <Text style={styles.title}>Check your email</Text>
         <Text style={styles.subtitle}>
-          We sent a 6-digit verification code to
+          {type === 'signup'
+            ? 'We sent a 6-digit code to activate your account'
+            : 'We sent a 6-digit code to reset your password'}
         </Text>
-        <Text style={styles.email}>{email}</Text>
-
-        {/* DEV hint */}
-        <View style={styles.devHint}>
-          <Ionicons name="bug-outline" size={14} color={colors.primary} />
-          <Text style={styles.devHintText}>
-            [DEV] Use code: <Text style={styles.devHintCode}>123456</Text>
-          </Text>
-        </View>
+        <Text style={styles.email}>{maskedEmail}</Text>
 
         {/* OTP Inputs */}
         <View style={styles.otpContainer}>
@@ -168,7 +170,7 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
               ref={(ref) => (inputRefs.current[index] = ref)}
               style={[
                 styles.otpInput,
-                digit && styles.otpInputFilled,
+                digit ? styles.otpInputFilled : null,
               ]}
               value={digit}
               onChangeText={(value) => handleOtpChange(value, index)}
@@ -194,7 +196,9 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
           {isVerifying ? (
             <ActivityIndicator color={colors.white} />
           ) : (
-            <Text style={styles.verifyButtonText}>Verify Email</Text>
+            <Text style={styles.verifyButtonText}>
+              {type === 'signup' ? 'Verify Email' : 'Verify Code'}
+            </Text>
           )}
         </TouchableOpacity>
 
@@ -206,13 +210,11 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
               {isResending ? (
                 <ActivityIndicator size="small" color={colors.primary} />
               ) : (
-                <Text style={styles.resendLink}>Resend OTP</Text>
+                <Text style={styles.resendLink}>Resend</Text>
               )}
             </TouchableOpacity>
           ) : (
-            <Text style={styles.countdownText}>
-              Resend in {countdown}s
-            </Text>
+            <Text style={styles.countdownText}>Resend in {countdown}s</Text>
           )}
         </View>
 
@@ -221,9 +223,7 @@ const OTPVerificationScreen = ({ navigation, route }: Props) => {
           style={styles.wrongEmailButton}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.wrongEmailText}>
-            Wrong email? Go back
-          </Text>
+          <Text style={styles.wrongEmailText}>Wrong email? Go back</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -235,6 +235,7 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
+
   header: {
     backgroundColor: colors.primary,
     paddingTop: 60,
@@ -246,6 +247,7 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: 32,
     borderBottomRightRadius: 32,
   },
+
   backButton: {
     width: 40,
     height: 40,
@@ -254,17 +256,20 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+
   headerTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
   },
+
   content: {
     flex: 1,
     paddingHorizontal: 24,
     paddingTop: 40,
     alignItems: 'center',
   },
+
   iconContainer: {
     width: 100,
     height: 100,
@@ -274,51 +279,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: 24,
   },
+
   title: {
     fontSize: typography.xxl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
   },
+
   subtitle: {
     fontSize: typography.md,
     color: colors.textSecondary,
     textAlign: 'center',
+    lineHeight: 22,
+    marginBottom: 6,
   },
+
   email: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.primary,
-    marginBottom: 16,
+    marginBottom: 32,
     textAlign: 'center',
   },
-  devHint: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    backgroundColor: colors.primaryLight,
-    paddingHorizontal: 14,
-    paddingVertical: 8,
-    borderRadius: 8,
-    marginBottom: 32,
-    borderWidth: 1,
-    borderColor: colors.primary,
-    borderStyle: 'dashed',
-  },
-  devHintText: {
-    fontSize: typography.sm,
-    color: colors.primary,
-  },
-  devHintCode: {
-    fontWeight: typography.bold,
-    letterSpacing: 2,
-  },
+
   otpContainer: {
     flexDirection: 'row',
     gap: 12,
     marginBottom: 32,
   },
+
   otpInput: {
     width: 48,
     height: 56,
@@ -328,13 +319,15 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     textAlign: 'center',
     fontSize: typography.xl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
+
   otpInputFilled: {
     borderColor: colors.primary,
     backgroundColor: colors.primaryLight,
   },
+
   verifyButton: {
     width: '100%',
     backgroundColor: colors.primary,
@@ -349,37 +342,45 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+
   buttonDisabled: {
     opacity: 0.5,
   },
+
   verifyButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
     letterSpacing: 0.5,
   },
+
   resendContainer: {
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: 16,
   },
+
   resendText: {
     fontSize: typography.sm,
     color: colors.textSecondary,
   },
+
   resendLink: {
     fontSize: typography.sm,
     color: colors.primary,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
+
   countdownText: {
     fontSize: typography.sm,
     color: colors.textMuted,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
+
   wrongEmailButton: {
     paddingVertical: 8,
   },
+
   wrongEmailText: {
     fontSize: typography.sm,
     color: colors.textSecondary,

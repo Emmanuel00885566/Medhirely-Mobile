@@ -296,7 +296,7 @@ const styles = StyleSheet.create({
   },
   facilityName: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 4,
   },
@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 10,
   },
@@ -362,7 +362,7 @@ const styles = StyleSheet.create({
   breakdownValue: {
     fontSize: typography.md,
     color: colors.textPrimary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   breakdownDivider: {
     height: 1,
@@ -371,12 +371,12 @@ const styles = StyleSheet.create({
   },
   youEarnedLabel: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   youEarnedValue: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.primary,
   },
   ratingCard: {
@@ -394,7 +394,7 @@ const styles = StyleSheet.create({
   },
   ratingLabel: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.primary,
     marginBottom: 16,
   },
@@ -428,7 +428,7 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
   },
   reviewSuccessCard: {
@@ -442,7 +442,7 @@ const styles = StyleSheet.create({
   },
   reviewSuccessTitle: {
     fontSize: typography.xl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   starsRow: {

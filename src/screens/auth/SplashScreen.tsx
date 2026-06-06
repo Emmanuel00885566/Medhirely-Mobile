@@ -125,7 +125,7 @@ const styles = StyleSheet.create({
 
   brandName: {
     fontSize: typography.xxxl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     letterSpacing: 2,
     marginBottom: 8,

@@ -16,7 +16,6 @@ import { Ionicons } from '@expo/vector-icons';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { AuthStackParamList } from '../../navigation/AuthStack';
-import { authService } from '../../services/auth';
 
 type Props = {
   navigation: NativeStackNavigationProp<AuthStackParamList, 'ForgotPassword'>;
@@ -25,19 +24,26 @@ type Props = {
 const ForgotPasswordScreen = ({ navigation }: Props) => {
   const [email, setEmail] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const [emailSent, setEmailSent] = useState(false);
 
-  const handleResetPassword = async () => {
+  const handleSendOTP = async () => {
     if (!email) {
       Alert.alert('Error', 'Please enter your email address');
       return;
     }
+
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(email)) {
+      Alert.alert('Error', 'Please enter a valid email address');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      await authService.forgotPassword(email);
-      setEmailSent(true);
+      // TODO: hook up your actual send OTP API call here
+      await new Promise((resolve) => setTimeout(resolve, 1500));
+      navigation.navigate('OTPVerification', { email });
     } catch (error) {
-      Alert.alert('Error', 'Something went wrong. Please try again.');
+      Alert.alert('Error', 'Failed to send OTP. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -53,202 +59,154 @@ const ForgotPasswordScreen = ({ navigation }: Props) => {
         keyboardShouldPersistTaps="handled"
         showsVerticalScrollIndicator={false}
       >
+        {/* Back Button */}
+        <TouchableOpacity
+          style={styles.backButton}
+          onPress={() => navigation.goBack()}
+        >
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+        </TouchableOpacity>
+
+        {/* Icon */}
+        <View style={styles.iconWrapper}>
+          <Ionicons name="lock-closed-outline" size={40} color={colors.primary} />
+        </View>
+
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity
-            style={styles.backButton}
-            onPress={() => navigation.goBack()}
-          >
-            <Ionicons name="arrow-back" size={22} color={colors.white} />
-          </TouchableOpacity>
-          <View style={styles.logoContainer}>
-            <Ionicons name="lock-open-outline" size={36} color={colors.white} />
+        <Text style={styles.title}>Forgot Password?</Text>
+        <Text style={styles.subtitle}>
+          No worries! Enter your email address and we'll send you a 6-digit
+          code to reset your password.
+        </Text>
+
+        {/* Email Input */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Email Address</Text>
+          <View style={styles.inputWrapper}>
+            <Ionicons
+              name="mail-outline"
+              size={18}
+              color={colors.textMuted}
+              style={styles.inputIcon}
+            />
+            <TextInput
+              style={styles.input}
+              placeholder="Enter your email"
+              placeholderTextColor={colors.textMuted}
+              value={email}
+              onChangeText={setEmail}
+              keyboardType="email-address"
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
           </View>
-          <Text style={styles.headerTitle}>Forgot Password?</Text>
-          <Text style={styles.headerSubtitle}>No worries, we got you!</Text>
         </View>
 
-        <View style={styles.form}>
-          {!emailSent ? (
-            <>
-              <Text style={styles.formTitle}>Reset Password</Text>
-              <Text style={styles.formSubtitle}>
-                Enter the email address linked to your account and we'll send
-                you a reset link.
-              </Text>
-
-              {/* Email */}
-              <View style={styles.inputGroup}>
-                <Text style={styles.label}>Email Address</Text>
-                <View style={styles.inputWrapper}>
-                  <Ionicons
-                    name="mail-outline"
-                    size={18}
-                    color={colors.textMuted}
-                    style={styles.inputIcon}
-                  />
-                  <TextInput
-                    style={styles.input}
-                    placeholder="Enter your email"
-                    placeholderTextColor={colors.textMuted}
-                    value={email}
-                    onChangeText={setEmail}
-                    keyboardType="email-address"
-                    autoCapitalize="none"
-                  />
-                </View>
-              </View>
-
-              {/* Reset Button */}
-              <TouchableOpacity
-                style={[styles.resetButton, isLoading && styles.buttonDisabled]}
-                onPress={handleResetPassword}
-                disabled={isLoading}
-                activeOpacity={0.85}
-              >
-                {isLoading ? (
-                  <ActivityIndicator color={colors.white} />
-                ) : (
-                  <Text style={styles.resetButtonText}>Send Reset Link</Text>
-                )}
-              </TouchableOpacity>
-            </>
+        {/* Send OTP Button */}
+        <TouchableOpacity
+          style={[styles.sendButton, isLoading && styles.buttonDisabled]}
+          onPress={handleSendOTP}
+          disabled={isLoading}
+          activeOpacity={0.85}
+        >
+          {isLoading ? (
+            <ActivityIndicator color={colors.white} />
           ) : (
-            // ✅ Success state
-            <View style={styles.successContainer}>
-              <View style={styles.successIconContainer}>
-                <Ionicons
-                  name="checkmark-circle"
-                  size={80}
-                  color={colors.success}
-                />
-              </View>
-              <Text style={styles.successTitle}>Email Sent! 🎉</Text>
-              <Text style={styles.successSubtitle}>
-                We've sent a password reset link to{' '}
-                <Text style={styles.successEmail}>{email}</Text>. Check your
-                inbox and follow the instructions.
-              </Text>
-              <TouchableOpacity
-                style={styles.backToLoginButton}
-                onPress={() => navigation.navigate('Login')}
-                activeOpacity={0.85}
-              >
-                <Text style={styles.backToLoginText}>Back to Sign In</Text>
-              </TouchableOpacity>
-            </View>
+            <Text style={styles.sendButtonText}>Send Code</Text>
           )}
+        </TouchableOpacity>
 
-          {/* Back to login */}
-          {!emailSent && (
-            <View style={styles.loginRow}>
-              <Text style={styles.loginText}>Remember your password? </Text>
-              <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-                <Text style={styles.loginLink}>Sign In</Text>
-              </TouchableOpacity>
-            </View>
-          )}
-        </View>
+        {/* Back to Login */}
+        <TouchableOpacity
+          style={styles.backToLogin}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Ionicons name="arrow-back" size={16} color={colors.primary} />
+          <Text style={styles.backToLoginText}>Back to Login</Text>
+        </TouchableOpacity>
       </ScrollView>
     </KeyboardAvoidingView>
   );
 };
 
+export default ForgotPasswordScreen;
+
 const styles = StyleSheet.create({
   container: {
     flexGrow: 1,
     backgroundColor: colors.background,
+    paddingHorizontal: 24,
+    paddingTop: 55,
   },
-  header: {
-    backgroundColor: colors.primary,
-    paddingTop: 60,
-    paddingBottom: 40,
-    alignItems: 'center',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
-  },
+
   backButton: {
-    position: 'absolute',
-    top: 56,
-    left: 24,
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
+    marginBottom: 24,
   },
-  logoContainer: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: 'rgba(255,255,255,0.2)',
+
+  iconWrapper: {
+    width: 80,
+    height: 80,
+    borderRadius: 40,
+    backgroundColor: colors.primaryLight,
     justifyContent: 'center',
     alignItems: 'center',
-    marginBottom: 12,
-    borderWidth: 2,
-    borderColor: 'rgba(255,255,255,0.3)',
+    marginBottom: 24,
   },
-  headerTitle: {
+
+  title: {
     fontSize: typography.xxl,
-    fontWeight: typography.bold,
-    color: colors.white,
-    letterSpacing: 0.5,
-  },
-  headerSubtitle: {
-    fontSize: typography.sm,
-    color: 'rgba(255,255,255,0.8)',
-    marginTop: 4,
-  },
-  form: {
-    flex: 1,
-    paddingHorizontal: 24,
-    paddingTop: 32,
-    paddingBottom: 40,
-  },
-  formTitle: {
-    fontSize: typography.xl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
-    marginBottom: 8,
+    marginBottom: 10,
   },
-  formSubtitle: {
-    fontSize: typography.md,
+
+  subtitle: {
+    fontSize: typography.sm,
     color: colors.textSecondary,
-    marginBottom: 28,
     lineHeight: 22,
+    marginBottom: 32,
   },
+
   inputGroup: {
     marginBottom: 24,
   },
+
   label: {
     fontSize: typography.sm,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
     color: colors.textPrimary,
     marginBottom: 8,
   },
+
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.inputBackground,
+    backgroundColor: colors.white,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: 14,
-    height: 52,
+    height: 50,
   },
+
   inputIcon: {
     marginRight: 10,
   },
+
   input: {
     flex: 1,
     fontSize: typography.md,
     color: colors.textPrimary,
   },
-  resetButton: {
+
+  sendButton: {
     backgroundColor: colors.primary,
     borderRadius: 12,
-    height: 54,
+    height: 50,
     justifyContent: 'center',
     alignItems: 'center',
     marginBottom: 24,
@@ -258,72 +216,28 @@ const styles = StyleSheet.create({
     shadowRadius: 8,
     elevation: 4,
   },
+
   buttonDisabled: {
     opacity: 0.7,
   },
-  resetButtonText: {
+
+  sendButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
     letterSpacing: 0.5,
   },
-  loginRow: {
+
+  backToLogin: {
     flexDirection: 'row',
+    alignItems: 'center',
     justifyContent: 'center',
-    alignItems: 'center',
+    gap: 6,
   },
-  loginText: {
-    fontSize: typography.sm,
-    color: colors.textSecondary,
-  },
-  loginLink: {
-    fontSize: typography.sm,
-    color: colors.primary,
-    fontWeight: typography.bold,
-  },
-  successContainer: {
-    alignItems: 'center',
-    paddingTop: 20,
-  },
-  successIconContainer: {
-    marginBottom: 24,
-  },
-  successTitle: {
-    fontSize: typography.xxl,
-    fontWeight: typography.bold,
-    color: colors.textPrimary,
-    marginBottom: 12,
-  },
-  successSubtitle: {
-    fontSize: typography.md,
-    color: colors.textSecondary,
-    textAlign: 'center',
-    lineHeight: 24,
-    marginBottom: 40,
-  },
-  successEmail: {
-    color: colors.primary,
-    fontWeight: typography.semiBold,
-  },
-  backToLoginButton: {
-    backgroundColor: colors.primary,
-    borderRadius: 12,
-    height: 54,
-    width: '100%',
-    justifyContent: 'center',
-    alignItems: 'center',
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
-    elevation: 4,
-  },
+
   backToLoginText: {
-    fontSize: typography.md,
-    fontWeight: typography.bold,
-    color: colors.white,
-    letterSpacing: 0.5,
+    fontSize: typography.sm,
+    color: colors.primary,
+    fontFamily: typography.medium,
   },
 });
-
-export default ForgotPasswordScreen;

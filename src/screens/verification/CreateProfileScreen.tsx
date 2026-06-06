@@ -336,7 +336,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: typography.xxl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 4,
     textAlign: 'center',
@@ -378,7 +378,7 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: typography.sm,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
     color: colors.textPrimary,
     marginBottom: 8,
   },
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
   phonePrefixText: {
     fontSize: typography.md,
     color: colors.textPrimary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   phoneDivider: {
     width: 1,
@@ -441,10 +441,11 @@ const styles = StyleSheet.create({
   pickerItemText: {
     fontSize: typography.md,
     color: colors.textPrimary,
+    fontFamily: typography.medium,
   },
   pickerItemTextActive: {
     color: colors.primary,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
   },
   continueButton: {
     backgroundColor: colors.primary,
@@ -465,7 +466,7 @@ const styles = StyleSheet.create({
   },
   continueButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
     letterSpacing: 0.5,
   },
@@ -476,6 +477,7 @@ const styles = StyleSheet.create({
   skipButtonText: {
     fontSize: typography.md,
     color: colors.textSecondary,
+    fontFamily: typography.medium,
   },
 });
 

@@ -1,3 +1,5 @@
+import api from './api';
+
 const MOCK_APPLICATIONS = [
   {
     id: '1',
@@ -85,54 +87,110 @@ const MOCK_APPLICATIONS = [
   },
 ];
 
+const USE_MOCK = true; // ← flip to false when backend is ready
+
 export const applicationsService = {
-  applyForShift: async (shiftId: string, workerId: string) => {
-    await new Promise((res) => setTimeout(res, 800));
-    const existing = MOCK_APPLICATIONS.find(
-      (a) => a.shiftId === shiftId && a.workerId === workerId
+  // ✅ GET all applications
+  getMyApplications: async (workerId?: string, status?: string) => {
+    if (USE_MOCK) {
+      await new Promise((res) => setTimeout(res, 600));
+      let results = MOCK_APPLICATIONS.filter((a) => a.workerId === (workerId || '1'));
+      if (status) results = results.filter((a) => a.status === status);
+      return results;
+    }
+    const response = await api.get('/applications/getAllApplications');
+    console.log('Applications response:', response.data);
+    return response.data;
+  },
+
+  // ✅ POST apply for shift
+  applyForShift: async (
+    shiftId: string,
+    workerId: string,
+    facilityId: string,
+    coverMessage?: string
+  ) => {
+    if (USE_MOCK) {
+      await new Promise((res) => setTimeout(res, 800));
+      const existing = MOCK_APPLICATIONS.find(
+        (a) => a.shiftId === shiftId && a.workerId === workerId
+      );
+      if (existing) throw new Error('Already applied for this shift');
+      const newApplication = {
+        id: Date.now().toString(),
+        shiftId,
+        workerId,
+        status: 'pending',
+        appliedAt: new Date().toISOString(),
+        shift: {
+          id: shiftId,
+          title: 'New Shift',
+          facility: 'General Hospital',
+          location: 'Lagos, Nigeria',
+          address: 'Lagos',
+          date: '2025-06-15',
+          startTime: '8:00 AM',
+          endTime: '4:00 PM',
+          pay: 20000,
+          contactName: 'Dr. Smith',
+          contactPhone: '08055555555',
+          checkInPin: '',
+        },
+      };
+      MOCK_APPLICATIONS.push(newApplication);
+      return newApplication;
+    }
+    const response = await api.post(
+      `/applications/applyForShift/${shiftId}`,
+      {
+        workerId,
+        facilityId,
+        coverMessage: coverMessage || '',
+      }
     );
-    if (existing) throw new Error('Already applied for this shift');
-    const newApplication = {
-      id: Date.now().toString(),
-      shiftId,
-      workerId,
-      status: 'pending',
-      appliedAt: new Date().toISOString(),
-      shift: {
-        id: shiftId,
-        title: 'New Shift',
-        facility: 'General Hospital',
-        location: 'Lagos, Nigeria',
-        address: 'Lagos',
-        date: '2025-06-15',
-        startTime: '8:00 AM',
-        endTime: '4:00 PM',
-        pay: 20000,
-        contactName: 'Dr. Smith',
-        contactPhone: '08055555555',
-        checkInPin: '',
-      },
-    };
-    MOCK_APPLICATIONS.push(newApplication);
-    return newApplication;
+    console.log('Apply response:', response.data);
+    return response.data;
   },
 
-  getMyApplications: async (workerId: string, status?: string) => {
-    await new Promise((res) => setTimeout(res, 600));
-    let results = MOCK_APPLICATIONS.filter((a) => a.workerId === workerId);
-    if (status) results = results.filter((a) => a.status === status);
-    return results;
+  // ✅ PATCH review application (admin/facility side)
+  reviewApplication: async (
+    applicationId: string,
+    status: 'approved' | 'rejected',
+    reviewedBy: string
+  ) => {
+    if (USE_MOCK) {
+      await new Promise((res) => setTimeout(res, 600));
+      const app = MOCK_APPLICATIONS.find((a) => a.id === applicationId);
+      if (app) app.status = status;
+      return { success: true };
+    }
+    const response = await api.patch(
+      `/applications/reviewApplication/${applicationId}`,
+      { status, reviewedBy }
+    );
+    console.log('Review response:', response.data);
+    return response.data;
   },
 
-  withdrawApplication: async (applicationId: string) => {
-    await new Promise((res) => setTimeout(res, 600));
-    const app = MOCK_APPLICATIONS.find((a) => a.id === applicationId);
-    if (app) app.status = 'withdrawn';
-    return { success: true };
-  },
-
+  // ✅ GET application by ID (frontend only, from mock)
   getApplicationById: async (applicationId: string) => {
-    await new Promise((res) => setTimeout(res, 500));
-    return MOCK_APPLICATIONS.find((a) => a.id === applicationId) || null;
+    if (USE_MOCK) {
+      await new Promise((res) => setTimeout(res, 500));
+      return MOCK_APPLICATIONS.find((a) => a.id === applicationId) || null;
+    }
+    const response = await api.get(`/applications/${applicationId}`);
+    return response.data;
+  },
+
+  // ✅ Withdraw application (frontend only for now)
+  withdrawApplication: async (applicationId: string) => {
+    if (USE_MOCK) {
+      await new Promise((res) => setTimeout(res, 600));
+      const app = MOCK_APPLICATIONS.find((a) => a.id === applicationId);
+      if (app) app.status = 'withdrawn';
+      return { success: true };
+    }
+    const response = await api.patch(`/applications/withdraw/${applicationId}`);
+    return response.data;
   },
 };

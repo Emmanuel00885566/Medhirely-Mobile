@@ -8,11 +8,11 @@ export const typography = {
   xxl: 24,
   xxxl: 30,
 
-  // Font Weights
-  regular: '400' as const,
-  medium: '500' as const,
-  semiBold: '600' as const,
-  bold: '700' as const,
+  // Font Weights — now pointing to Manrope font families
+  regular: 'Manrope_400Regular',
+  medium: 'Manrope_500Medium',
+  semiBold: 'Manrope_600SemiBold',
+  bold: 'Manrope_700Bold',
 
   // Line Heights
   tight: 1.2,

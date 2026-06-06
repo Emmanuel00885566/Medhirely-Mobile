@@ -1,3 +1,5 @@
+import api from './api';
+
 const MOCK_SHIFTS = [
   {
     id: '1',
@@ -126,25 +128,96 @@ const MOCK_SHIFTS = [
   },
 ];
 
+const USE_MOCK = false; // ← flip to false once backend endpoint is ready
+
 export const shiftsService = {
+  // ✅ GET all shifts
   getShifts: async () => {
+  if (USE_MOCK) {
     await new Promise((res) => setTimeout(res, 800));
     return MOCK_SHIFTS;
-  },
+  }
+  console.log('Fetching shifts from:', '/shifts/discover/all');
+  const response = await api.get('/shifts/discover/all');
+  console.log('Shifts response:', JSON.stringify(response.data, null, 2));
 
+  // Map backend fields to what the UI expects
+  return response.data.shifts.map((shift: any) => ({
+    id: shift._id,
+    title: shift.title,
+    facility: shift.location, // no facility name yet, using location
+    facilityId: shift.facilityId,
+    facilityRating: 4.5, // not in backend yet
+    facilityReviews: 0,  // not in backend yet
+    facilityVerified: true,
+    location: shift.location,
+    address: shift.location,
+    specialty: shift.specialty,
+    date: new Date(shift.shiftDate).toDateString(),
+    startTime: shift.startTime,
+    endTime: shift.endTime,
+    duration: `${parseInt(shift.endTime) - parseInt(shift.startTime)} hrs`,
+    hourlyRate: shift.salary,
+    payPerShift: shift.salary,
+    requirements: ['No Exp Required'],
+    shiftType: shift.shiftType === 'night' ? 'Night Shift' : 'Day Shift',
+    distance: 'N/A',
+    applied: shift.applicants?.length || 0,
+    status: shift.status,
+    responseTime: '4-6 hours',
+    contactPhone: 'N/A',
+    notes: shift.notes,
+    urgent: shift.urgent,
+  }));
+},
+  // ✅ GET shift by ID
   getShiftById: async (id: string) => {
+  if (USE_MOCK) {
     await new Promise((res) => setTimeout(res, 500));
     return MOCK_SHIFTS.find((s) => s.id === id) || null;
-  },
+  }
+  const response = await api.get(`/shifts/discover/${id}`);
+  console.log('Shift by ID response:', JSON.stringify(response.data, null, 2));
 
+  const shift = response.data.shift || response.data;
+  return {
+    id: shift._id,
+    title: shift.title,
+    facility: shift.location,
+    facilityId: shift.facilityId,
+    facilityRating: 4.5,
+    facilityReviews: 0,
+    facilityVerified: true,
+    location: shift.location,
+    address: shift.location,
+    specialty: shift.specialty,
+    date: new Date(shift.shiftDate).toDateString(),
+    startTime: shift.startTime,
+    endTime: shift.endTime,
+    duration: `${parseInt(shift.endTime) - parseInt(shift.startTime)} hrs`,
+    hourlyRate: shift.salary,
+    payPerShift: shift.salary,
+    requirements: ['No Exp Required'],
+    shiftType: shift.shiftType === 'night' ? 'Night Shift' : 'Day Shift',
+    distance: 'N/A',
+    applied: shift.applicants?.length || 0,
+    status: shift.status,
+    responseTime: '4-6 hours',
+    contactPhone: 'N/A',
+    notes: shift.notes,
+    urgent: shift.urgent,
+  };
+},
+
+  // Frontend filtering — works with both mock and real data
   filterShifts: async (filters: {
     specialty?: string;
     location?: string;
     minPay?: number;
     shiftType?: string;
   }) => {
-    await new Promise((res) => setTimeout(res, 600));
-    return MOCK_SHIFTS.filter((shift) => {
+    const shifts = await shiftsService.getShifts();
+    return shifts.filter((shift: any) => {
       if (filters.specialty && shift.specialty !== filters.specialty)
         return false;
       if (filters.location && !shift.location.includes(filters.location))

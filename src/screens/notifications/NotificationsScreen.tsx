@@ -234,7 +234,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.xxl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   markAllButton: {
@@ -250,7 +250,7 @@ const styles = StyleSheet.create({
   markAllText: {
     fontSize: typography.sm,
     color: colors.primary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   unreadBanner: {
     marginHorizontal: 16,
@@ -263,7 +263,7 @@ const styles = StyleSheet.create({
   unreadBannerText: {
     fontSize: typography.sm,
     color: colors.primary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   listContainer: {
     paddingHorizontal: 16,
@@ -301,13 +301,13 @@ const styles = StyleSheet.create({
   },
   notificationTitle: {
     fontSize: typography.md,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
     color: colors.textSecondary,
     flex: 1,
     marginRight: 8,
   },
   notificationTitleUnread: {
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   notificationTime: {
@@ -344,7 +344,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   emptySubtitle: {

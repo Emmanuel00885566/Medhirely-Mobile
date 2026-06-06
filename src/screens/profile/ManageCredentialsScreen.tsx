@@ -6,12 +6,16 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  TextInput,
+  ActivityIndicator,
+  Modal,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { ProfileStackParamList } from '../../navigation/ProfileStack';
+import { workerService, Certification } from '../../services/workerService';
 
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'ManageCredentials'>;
@@ -20,54 +24,65 @@ type Props = {
 type Document = {
   id: string;
   title: string;
-  description: string;
+  subtitle: string;
   icon: keyof typeof Ionicons.glyphMap;
   status: 'approved' | 'pending' | 'rejected' | 'not_uploaded';
   uploadedAt: string | null;
   rejectionReason?: string;
   required: boolean;
+  certKey: string;
 };
 
 const ManageCredentialsScreen = ({ navigation }: Props) => {
   const [documents, setDocuments] = useState<Document[]>([
     {
+      id: 'id',
+      title: 'Government Issued ID',
+      subtitle: '(e.g. National ID, Passport)',
+      icon: 'card-outline',
+      status: 'not_uploaded',
+      uploadedAt: null,
+      required: true,
+      certKey: 'Government Issued ID',
+    },
+    {
       id: 'license',
       title: 'Professional License',
-      description: 'Your valid nursing/medical license',
+      subtitle: '(e.g. Nursing License)',
       icon: 'ribbon-outline',
-      status: 'approved',
-      uploadedAt: '2025-06-01',
+      status: 'not_uploaded',
+      uploadedAt: null,
       required: true,
+      certKey: 'Professional License',
     },
     {
       id: 'certificate',
-      title: 'Certifications',
-      description: 'BLS, ACLS, and other certifications',
+      title: 'Certificate',
+      subtitle: '(e.g. BLS, ACLS, etc)',
       icon: 'document-text-outline',
-      status: 'approved',
-      uploadedAt: '2025-06-01',
-      required: true,
-    },
-    {
-      id: 'id',
-      title: 'Government Issued ID',
-      description: 'National ID, Passport or Driver License',
-      icon: 'card-outline',
-      status: 'rejected',
-      uploadedAt: '2025-06-01',
-      rejectionReason: 'Document image is blurry. Please upload a clearer photo.',
-      required: true,
-    },
-    {
-      id: 'cv',
-      title: 'CV / Resume',
-      description: 'Your most recent CV or resume',
-      icon: 'briefcase-outline',
       status: 'not_uploaded',
       uploadedAt: null,
-      required: false,
+      required: true,
+      certKey: 'Certificate',
+    },
+    {
+      id: 'proof',
+      title: 'Proof of Address',
+      subtitle: '(Utility Bill, Bank Statement)',
+      icon: 'home-outline',
+      status: 'not_uploaded',
+      uploadedAt: null,
+      required: true,
+      certKey: 'Proof of Address',
     },
   ]);
+
+  // Modal state
+  const [modalVisible, setModalVisible] = useState(false);
+  const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
+  const [documentUrl, setDocumentUrl] = useState('');
+  const [expiryDate, setExpiryDate] = useState('');
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getStatusConfig = (status: string) => {
     switch (status) {
@@ -102,58 +117,72 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
     }
   };
 
-  const handleReupload = (docId: string) => {
-    Alert.alert(
-      'Re-upload Document',
-      'In the real app this will open your file picker. For now we are simulating the upload.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Simulate Upload',
-          onPress: () => {
-            setDocuments((prev) =>
-              prev.map((doc) =>
-                doc.id === docId
-                  ? { ...doc, status: 'pending', rejectionReason: undefined }
-                  : doc
-              )
-            );
-            Alert.alert('Uploaded!', 'Document re-uploaded successfully. Awaiting admin review.');
-          },
-        },
-      ]
-    );
+  const handleOpenUploadModal = (doc: Document) => {
+    setSelectedDoc(doc);
+    setDocumentUrl('');
+    setExpiryDate('');
+    setModalVisible(true);
   };
 
-  const handleUpload = (docId: string) => {
-    Alert.alert(
-      'Upload Document',
-      'In the real app this will open your file picker. For now we are simulating the upload.',
-      [
-        { text: 'Cancel', style: 'cancel' },
-        {
-          text: 'Simulate Upload',
-          onPress: () => {
-            setDocuments((prev) =>
-              prev.map((doc) =>
-                doc.id === docId
-                  ? {
-                      ...doc,
-                      status: 'pending',
-                      uploadedAt: new Date().toISOString().split('T')[0],
-                    }
-                  : doc
-              )
-            );
-            Alert.alert('Uploaded!', 'Document uploaded successfully. Awaiting admin review.');
-          },
-        },
-      ]
-    );
+  const handleSubmitDocument = async () => {
+    if (!documentUrl || !expiryDate) {
+      Alert.alert('Error', 'Please fill in all fields');
+      return;
+    }
+    if (!selectedDoc) return;
+
+    setIsSubmitting(true);
+    try {
+      // Get all currently uploaded docs
+      const existingCerts: Certification[] = documents
+        .filter((d) => d.status === 'pending' || d.status === 'approved')
+        .map((d) => ({
+          documentName: d.certKey,
+          documentUrl: 'https://mock-url.com/doc.pdf',
+          expiryDate: expiryDate,
+        }));
+
+      // Add the new one
+      const newCert: Certification = {
+        documentName: selectedDoc.certKey,
+        documentUrl: documentUrl,
+        expiryDate: expiryDate,
+      };
+
+      await workerService.uploadCredentials([...existingCerts, newCert]);
+
+      // Update UI
+      setDocuments((prev) =>
+        prev.map((doc) =>
+          doc.id === selectedDoc.id
+            ? {
+                ...doc,
+                status: 'pending',
+                rejectionReason: undefined,
+                uploadedAt: new Date().toISOString().split('T')[0],
+              }
+            : doc
+        )
+      );
+
+      setModalVisible(false);
+      Alert.alert(
+        'Submitted! ✅',
+        'Your document has been submitted for admin review.'
+      );
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Failed to submit document.'
+      );
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  const approvedCount = documents.filter((d) => d.status === 'approved').length;
-  const totalCount = documents.length;
+  const approvedCount = documents.filter(
+    (d) => d.status === 'approved' || d.status === 'pending'
+  ).length;
 
   return (
     <View style={styles.container}>
@@ -163,7 +192,7 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={22} color={colors.white} />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Credentials</Text>
         <View style={{ width: 40 }} />
@@ -178,12 +207,20 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
           <View style={styles.summaryLeft}>
             <Text style={styles.summaryTitle}>Document Status</Text>
             <Text style={styles.summarySubtitle}>
-              {approvedCount} of {totalCount} documents approved
+              {approvedCount} of {documents.length} documents submitted
             </Text>
+            <View style={styles.progressBarBg}>
+              <View
+                style={[
+                  styles.progressBarFill,
+                  { width: `${(approvedCount / documents.length) * 100}%` },
+                ]}
+              />
+            </View>
           </View>
           <View style={styles.summaryCircle}>
             <Text style={styles.summaryCircleText}>
-              {approvedCount}/{totalCount}
+              {approvedCount}/{documents.length}
             </Text>
           </View>
         </View>
@@ -196,123 +233,199 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
             color={colors.primary}
           />
           <Text style={styles.infoText}>
-            Keep your documents up to date to maintain your verified status and
-            access to shifts.
+            Share your document links below. Upload documents to Google Drive
+            or Dropbox and paste the link here.
           </Text>
         </View>
 
-        {/* Required Documents */}
-        <Text style={styles.sectionTitle}>Required Documents</Text>
-        {documents
-          .filter((d) => d.required)
-          .map((doc) => {
-            const config = getStatusConfig(doc.status);
-            return (
-              <View key={doc.id} style={styles.documentCard}>
-                <View style={styles.documentHeader}>
-                  <View style={[styles.documentIconContainer, { backgroundColor: config.bg }]}>
-                    <Ionicons name={doc.icon} size={24} color={config.color} />
-                  </View>
-                  <View style={styles.documentInfo}>
-                    <Text style={styles.documentTitle}>{doc.title}</Text>
-                    <Text style={styles.documentDescription}>
-                      {doc.description}
-                    </Text>
-                  </View>
-                  <View style={[styles.statusBadge, { backgroundColor: config.bg }]}>
-                    <Ionicons name={config.icon} size={12} color={config.color} />
-                    <Text style={[styles.statusText, { color: config.color }]}>
-                      {config.label}
-                    </Text>
-                  </View>
+        {/* Documents */}
+        <Text style={styles.sectionTitle}>Documents</Text>
+        {documents.map((doc) => {
+          const config = getStatusConfig(doc.status);
+          return (
+            <View key={doc.id} style={styles.documentCard}>
+              <View style={styles.documentHeader}>
+                <View
+                  style={[
+                    styles.documentIconContainer,
+                    { backgroundColor: config.bg },
+                  ]}
+                >
+                  <Ionicons
+                    name={
+                      doc.status === 'approved' || doc.status === 'pending'
+                        ? 'checkmark'
+                        : doc.icon
+                    }
+                    size={22}
+                    color={config.color}
+                  />
                 </View>
-
-                {/* Upload date */}
-                {doc.uploadedAt && (
-                  <View style={styles.uploadedRow}>
-                    <Ionicons name="calendar-outline" size={12} color={colors.textMuted} />
-                    <Text style={styles.uploadedText}>
-                      Uploaded: {doc.uploadedAt}
-                    </Text>
-                  </View>
-                )}
-
-                {/* Rejection reason */}
-                {doc.status === 'rejected' && doc.rejectionReason && (
-                  <View style={styles.rejectionCard}>
-                    <Ionicons name="alert-circle-outline" size={16} color={colors.error} />
-                    <Text style={styles.rejectionText}>{doc.rejectionReason}</Text>
-                  </View>
-                )}
-
-                {/* Actions */}
-                {doc.status === 'rejected' && (
-                  <TouchableOpacity
-                    style={styles.reuploadButton}
-                    onPress={() => handleReupload(doc.id)}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="cloud-upload-outline" size={16} color={colors.white} />
-                    <Text style={styles.reuploadButtonText}>Re-upload Document</Text>
-                  </TouchableOpacity>
-                )}
-
-                {doc.status === 'not_uploaded' && (
-                  <TouchableOpacity
-                    style={styles.uploadButton}
-                    onPress={() => handleUpload(doc.id)}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="cloud-upload-outline" size={16} color={colors.primary} />
-                    <Text style={styles.uploadButtonText}>Upload Document</Text>
-                  </TouchableOpacity>
-                )}
-              </View>
-            );
-          })}
-
-        {/* Optional Documents */}
-        <Text style={styles.sectionTitle}>Optional Documents</Text>
-        {documents
-          .filter((d) => !d.required)
-          .map((doc) => {
-            const config = getStatusConfig(doc.status);
-            return (
-              <View key={doc.id} style={styles.documentCard}>
-                <View style={styles.documentHeader}>
-                  <View style={[styles.documentIconContainer, { backgroundColor: config.bg }]}>
-                    <Ionicons name={doc.icon} size={24} color={config.color} />
-                  </View>
-                  <View style={styles.documentInfo}>
+                <View style={styles.documentInfo}>
+                  <View style={styles.documentTitleRow}>
                     <Text style={styles.documentTitle}>{doc.title}</Text>
-                    <Text style={styles.documentDescription}>
-                      {doc.description}
-                    </Text>
+                    <View
+                      style={[
+                        styles.statusBadge,
+                        { backgroundColor: config.bg },
+                      ]}
+                    >
+                      <Text
+                        style={[styles.statusText, { color: config.color }]}
+                      >
+                        {config.label}
+                      </Text>
+                    </View>
                   </View>
-                  <View style={[styles.statusBadge, { backgroundColor: config.bg }]}>
-                    <Ionicons name={config.icon} size={12} color={config.color} />
-                    <Text style={[styles.statusText, { color: config.color }]}>
-                      {config.label}
+                  <Text style={styles.documentSubtitle}>{doc.subtitle}</Text>
+                  {doc.uploadedAt && (
+                    <Text style={styles.uploadedDate}>
+                      Submitted: {doc.uploadedAt}
                     </Text>
-                  </View>
+                  )}
                 </View>
-
-                {doc.status === 'not_uploaded' && (
-                  <TouchableOpacity
-                    style={styles.uploadButton}
-                    onPress={() => handleUpload(doc.id)}
-                    activeOpacity={0.85}
-                  >
-                    <Ionicons name="cloud-upload-outline" size={16} color={colors.primary} />
-                    <Text style={styles.uploadButtonText}>Upload Document</Text>
-                  </TouchableOpacity>
-                )}
               </View>
-            );
-          })}
+
+              {/* Rejection Reason */}
+              {doc.status === 'rejected' && doc.rejectionReason && (
+                <View style={styles.rejectionCard}>
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={16}
+                    color={colors.error}
+                  />
+                  <Text style={styles.rejectionText}>
+                    {doc.rejectionReason}
+                  </Text>
+                </View>
+              )}
+
+              {/* Upload/Reupload Button */}
+              {(doc.status === 'rejected' ||
+                doc.status === 'not_uploaded') && (
+                <TouchableOpacity
+                  style={[
+                    styles.uploadButton,
+                    doc.status === 'rejected' && styles.reuploadButton,
+                  ]}
+                  onPress={() => handleOpenUploadModal(doc)}
+                  activeOpacity={0.85}
+                >
+                  <Ionicons
+                    name="cloud-upload-outline"
+                    size={16}
+                    color={
+                      doc.status === 'rejected' ? colors.white : colors.primary
+                    }
+                  />
+                  <Text
+                    style={[
+                      styles.uploadButtonText,
+                      doc.status === 'rejected' && styles.reuploadButtonText,
+                    ]}
+                  >
+                    {doc.status === 'rejected'
+                      ? 'Re-upload Document'
+                      : 'Upload Document'}
+                  </Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          );
+        })}
+
+        {/* Accepted Formats */}
+        <View style={styles.formatsCard}>
+          <Ionicons
+            name="information-circle-outline"
+            size={16}
+            color={colors.textSecondary}
+          />
+          <Text style={styles.formatsText}>
+            Share document links from Google Drive, Dropbox or any cloud
+            storage. Make sure the link is publicly accessible.
+          </Text>
+        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
+
+      {/* Upload Modal */}
+      <Modal
+        visible={modalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => setModalVisible(false)}
+      >
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalContent}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>
+                Upload {selectedDoc?.title}
+              </Text>
+              <TouchableOpacity onPress={() => setModalVisible(false)}>
+                <Ionicons name="close" size={24} color={colors.textPrimary} />
+              </TouchableOpacity>
+            </View>
+
+            <Text style={styles.modalSubtitle}>{selectedDoc?.subtitle}</Text>
+
+            {/* Document URL */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Document URL</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="https://drive.google.com/your-document"
+                placeholderTextColor={colors.textMuted}
+                value={documentUrl}
+                onChangeText={setDocumentUrl}
+                autoCapitalize="none"
+                keyboardType="url"
+              />
+              <Text style={styles.inputHint}>
+                Upload to Google Drive or Dropbox and paste the link here
+              </Text>
+            </View>
+
+            {/* Expiry Date */}
+            <View style={styles.inputGroup}>
+              <Text style={styles.label}>Expiry Date</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="YYYY-MM-DD"
+                placeholderTextColor={colors.textMuted}
+                value={expiryDate}
+                onChangeText={setExpiryDate}
+                keyboardType="numeric"
+              />
+            </View>
+
+            {/* Submit */}
+            <TouchableOpacity
+              style={[
+                styles.submitButton,
+                isSubmitting && styles.buttonDisabled,
+              ]}
+              onPress={handleSubmitDocument}
+              disabled={isSubmitting}
+              activeOpacity={0.85}
+            >
+              {isSubmitting ? (
+                <ActivityIndicator color={colors.white} />
+              ) : (
+                <Text style={styles.submitButtonText}>Submit Document</Text>
+              )}
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.cancelButton}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.cancelButtonText}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
@@ -323,32 +436,27 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: colors.primary,
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: colors.background,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
-    color: colors.white,
+    fontFamily: typography.bold,
+    color: colors.textPrimary,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: 16,
   },
   summaryCard: {
     backgroundColor: colors.primary,
@@ -361,21 +469,34 @@ const styles = StyleSheet.create({
   },
   summaryLeft: {
     flex: 1,
+    marginRight: 16,
   },
   summaryTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
     marginBottom: 4,
   },
   summarySubtitle: {
     fontSize: typography.sm,
     color: 'rgba(255,255,255,0.8)',
+    marginBottom: 12,
+  },
+  progressBarBg: {
+    height: 6,
+    backgroundColor: 'rgba(255,255,255,0.3)',
+    borderRadius: 3,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    backgroundColor: colors.white,
+    borderRadius: 3,
   },
   summaryCircle: {
-    width: 60,
-    height: 60,
-    borderRadius: 30,
+    width: 56,
+    height: 56,
+    borderRadius: 28,
     backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
@@ -384,17 +505,17 @@ const styles = StyleSheet.create({
   },
   summaryCircleText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
   },
   infoCard: {
     flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 10,
     backgroundColor: colors.primaryLight,
     borderRadius: 12,
     padding: 14,
     marginBottom: 24,
-    gap: 10,
-    alignItems: 'flex-start',
   },
   infoText: {
     flex: 1,
@@ -404,7 +525,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 12,
   },
@@ -418,7 +539,7 @@ const styles = StyleSheet.create({
   },
   documentHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+    alignItems: 'flex-start',
     gap: 12,
     marginBottom: 8,
   },
@@ -432,35 +553,34 @@ const styles = StyleSheet.create({
   documentInfo: {
     flex: 1,
   },
-  documentTitle: {
-    fontSize: typography.md,
-    fontWeight: typography.semiBold,
-    color: colors.textPrimary,
-    marginBottom: 2,
-  },
-  documentDescription: {
-    fontSize: typography.sm,
-    color: colors.textSecondary,
-  },
-  statusBadge: {
+  documentTitleRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: 4,
+    justifyContent: 'space-between',
+    marginBottom: 4,
+  },
+  documentTitle: {
+    fontSize: typography.md,
+    fontFamily: typography.semiBold,
+    color: colors.textPrimary,
+    flex: 1,
+    marginRight: 8,
+  },
+  statusBadge: {
     paddingHorizontal: 8,
-    paddingVertical: 4,
+    paddingVertical: 3,
     borderRadius: 8,
   },
   statusText: {
     fontSize: typography.xs,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
-  uploadedRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 4,
-    marginBottom: 8,
+  documentSubtitle: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+    marginBottom: 2,
   },
-  uploadedText: {
+  uploadedDate: {
     fontSize: typography.xs,
     color: colors.textMuted,
   },
@@ -479,20 +599,6 @@ const styles = StyleSheet.create({
     color: colors.error,
     lineHeight: 18,
   },
-  reuploadButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    gap: 8,
-    backgroundColor: colors.error,
-    borderRadius: 10,
-    height: 44,
-  },
-  reuploadButtonText: {
-    fontSize: typography.sm,
-    fontWeight: typography.bold,
-    color: colors.white,
-  },
   uploadButton: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -504,10 +610,115 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.primary,
   },
+  reuploadButton: {
+    backgroundColor: colors.error,
+    borderColor: colors.error,
+  },
   uploadButtonText: {
     fontSize: typography.sm,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.primary,
+  },
+  reuploadButtonText: {
+    color: colors.white,
+  },
+  formatsCard: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    gap: 8,
+    backgroundColor: colors.inputBackground,
+    borderRadius: 12,
+    padding: 14,
+    marginTop: 8,
+  },
+  formatsText: {
+    flex: 1,
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+    lineHeight: 20,
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 8,
+  },
+  modalTitle: {
+    fontSize: typography.lg,
+    fontFamily: typography.bold,
+    color: colors.textPrimary,
+  },
+  modalSubtitle: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+    marginBottom: 20,
+  },
+  inputGroup: {
+    marginBottom: 16,
+  },
+  label: {
+    fontSize: typography.sm,
+    fontFamily: typography.medium,
+    color: colors.textPrimary,
+    marginBottom: 8,
+  },
+  input: {
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    height: 52,
+    fontSize: typography.md,
+    color: colors.textPrimary,
+  },
+  inputHint: {
+    fontSize: typography.xs,
+    color: colors.textMuted,
+    marginTop: 6,
+    lineHeight: 16,
+  },
+  submitButton: {
+    backgroundColor: colors.primary,
+    borderRadius: 12,
+    height: 52,
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginBottom: 12,
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  buttonDisabled: {
+    opacity: 0.7,
+  },
+  submitButtonText: {
+    fontSize: typography.md,
+    fontFamily: typography.bold,
+    color: colors.white,
+  },
+  cancelButton: {
+    height: 48,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  cancelButtonText: {
+    fontSize: typography.md,
+    color: colors.textSecondary,
+    fontFamily: typography.medium,
   },
 });
 

@@ -287,7 +287,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.xxl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   bellButton: {
@@ -333,11 +333,12 @@ const styles = StyleSheet.create({
   },
   totalLabel: {
     fontSize: typography.sm,
+    fontFamily: typography.medium,
     color: colors.textSecondary,
   },
   totalAmount: {
     fontSize: 32,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 8,
   },
@@ -360,7 +361,7 @@ const styles = StyleSheet.create({
   },
   withdrawButtonText: {
     fontSize: typography.sm,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
   },
   walletImage: {
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
   },
   statCardAmount: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.success,
     marginBottom: 2,
   },
@@ -418,7 +419,7 @@ const styles = StyleSheet.create({
   },
   weekAmount: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily  : typography.bold,
     color: colors.textPrimary,
   },
   weekSub: {
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   chart: {
@@ -464,7 +465,7 @@ const styles = StyleSheet.create({
   viewAllText: {
     fontSize: typography.sm,
     color: colors.primary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   transactionItem: {
     flexDirection: 'row',
@@ -489,7 +490,7 @@ const styles = StyleSheet.create({
   },
   transactionFacility: {
     fontSize: typography.sm,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
     color: colors.textPrimary,
     marginBottom: 2,
   },
@@ -508,7 +509,7 @@ const styles = StyleSheet.create({
   },
   transactionAmount: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   transactionBadge: {
@@ -518,7 +519,7 @@ const styles = StyleSheet.create({
   },
   transactionBadgeText: {
     fontSize: typography.xs,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
 });
 

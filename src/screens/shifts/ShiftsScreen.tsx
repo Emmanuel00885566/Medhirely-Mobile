@@ -33,17 +33,19 @@ const ShiftsScreen = () => {
   const [activeTab, setActiveTab] = useState('For you');
   const [bookmarked, setBookmarked] = useState<string[]>([]);
 
-  const loadShifts = async () => {
-    try {
-      const data = await shiftsService.getShifts();
-      setShifts(data);
-    } catch (error) {
-      console.log('Error loading shifts:', error);
-    } finally {
-      setIsLoading(false);
-      setIsRefreshing(false);
-    }
-  };
+const loadShifts = async () => {
+  try {
+    const data = await shiftsService.getShifts();
+    console.log('Shifts data:', JSON.stringify(data, null, 2));
+    setShifts(Array.isArray(data) ? data : []);
+  } catch (error) {
+    console.log('Error loading shifts:', error);
+    setShifts([]);
+  } finally {
+    setIsLoading(false);
+    setIsRefreshing(false);
+  }
+};
 
   useEffect(() => {
     loadShifts();
@@ -70,7 +72,7 @@ const ShiftsScreen = () => {
   const renderShiftCard = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.shiftCard}
-      onPress={() => navigation.navigate('ShiftDetail', { shiftId: item.id })}
+      onPress={() => navigation.navigate('ShiftDetail', { shiftId: item.id, shiftData: JSON.stringify(item) })}
       activeOpacity={0.85}
     >
       {/* Card Top Row */}
@@ -143,7 +145,7 @@ const ShiftsScreen = () => {
           style={styles.applyButton}
           onPress={(e) => {
             e.stopPropagation();
-            navigation.navigate('ShiftDetail', { shiftId: item.id });
+            navigation.navigate('ShiftDetail', { shiftId: item.id, shiftData: JSON.stringify(item) });
           }}
           activeOpacity={0.85}
         >
@@ -305,7 +307,7 @@ const styles = StyleSheet.create({
   },
   userSpecialty: {
     fontSize: typography.xxl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 4,
   },
@@ -356,11 +358,11 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: typography.md,
     color: colors.textMuted,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   tabTextActive: {
     color: colors.primary,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
   tabUnderline: {
     position: 'absolute',
@@ -402,7 +404,7 @@ const styles = StyleSheet.create({
   },
   shiftTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   appliedText: {
@@ -420,12 +422,12 @@ const styles = StyleSheet.create({
   },
   payText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.primary,
     marginBottom: 12,
   },
   payLabel: {
-    fontWeight: typography.regular,
+    fontFamily: typography.regular,
     color: colors.textSecondary,
     fontSize: typography.sm,
   },
@@ -446,7 +448,7 @@ const styles = StyleSheet.create({
   expBadgeText: {
     fontSize: typography.xs,
     color: colors.textPrimary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   shiftTypeBadge: {
     flexDirection: 'row',
@@ -461,7 +463,7 @@ const styles = StyleSheet.create({
   },
   shiftTypeBadgeText: {
     fontSize: typography.xs,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   distanceBadge: {
     flexDirection: 'row',
@@ -477,7 +479,7 @@ const styles = StyleSheet.create({
   distanceBadgeText: {
     fontSize: typography.xs,
     color: colors.textSecondary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   cardDivider: {
     height: 1,
@@ -498,7 +500,7 @@ const styles = StyleSheet.create({
   },
   facilityName: {
     fontSize: typography.md,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
     color: colors.textPrimary,
     flex: 1,
   },
@@ -514,7 +516,7 @@ const styles = StyleSheet.create({
   },
   applyButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
   },
   ratingRow: {
@@ -534,7 +536,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   emptySubtitle: {

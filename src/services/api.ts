@@ -1,8 +1,8 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
-// 👇 When your backend is ready, just change this URL
-const BASE_URL = 'https://medhirely-backend.onrender.com';
+const BASE_URL =
+  'https://medhirely-backend.onrender.com/api';
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -12,25 +12,34 @@ const api = axios.create({
   },
 });
 
-// ✅ Automatically attach JWT token to every request
+// ✅ Attach token to every request
 api.interceptors.request.use(
   async (config) => {
-    const token = await AsyncStorage.getItem('token');
+    const token =
+      await AsyncStorage.getItem('token');
+
     if (token) {
-      config.headers.Authorization = `Bearer ${token}`;
+      config.headers.Authorization =
+        `Bearer ${token}`;
     }
+
     return config;
   },
   (error) => Promise.reject(error)
 );
 
-// ✅ Handle expired tokens globally
+// ✅ Response interceptor
 api.interceptors.response.use(
   (response) => response,
   async (error) => {
-    if (error.response?.status === 401) {
+    console.log('API Error full:', error?.message);
+    console.log('API Error code:', error?.code);
+    console.log('API Error config url:', error?.config?.url);
+    console.log('Status:', error?.response?.status);
+    console.log('Response data:', error?.response?.data);
+ if (error?.response?.status === 401) {
       await AsyncStorage.removeItem('token');
-      // Navigation to login will be handled by AuthContext
+      await AsyncStorage.removeItem('user');
     }
     return Promise.reject(error);
   }

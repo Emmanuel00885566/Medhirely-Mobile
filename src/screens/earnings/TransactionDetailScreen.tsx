@@ -259,7 +259,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   content: {
@@ -285,7 +285,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: typography.sm,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
   facilityInfo: {
     flexDirection: 'row',
@@ -303,7 +303,7 @@ const styles = StyleSheet.create({
   },
   facilityName: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 2,
   },
@@ -324,7 +324,7 @@ const styles = StyleSheet.create({
   },
   amount: {
     fontSize: 32,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   paidConfirm: {
@@ -342,7 +342,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 10,
   },
@@ -366,7 +366,7 @@ const styles = StyleSheet.create({
   breakdownValue: {
     fontSize: typography.md,
     color: colors.textPrimary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   breakdownDivider: {
     height: 1,
@@ -375,12 +375,12 @@ const styles = StyleSheet.create({
   },
   youEarnedLabel: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   youEarnedValue: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.primary,
   },
   methodCard: {
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
   },
   methodText: {
     fontSize: typography.md,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
     color: colors.textPrimary,
   },
   methodDetails: {
@@ -432,7 +432,7 @@ const styles = StyleSheet.create({
   },
   methodValue: {
     fontSize: typography.sm,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
     color: colors.textPrimary,
   },
   methodDivider: {
@@ -462,7 +462,7 @@ const styles = StyleSheet.create({
   helpLink: {
     fontSize: typography.sm,
     color: colors.primary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   noticeCard: {
     flexDirection: 'row',

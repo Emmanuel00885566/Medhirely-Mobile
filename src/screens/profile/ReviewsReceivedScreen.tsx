@@ -4,14 +4,13 @@ import {
   Text,
   StyleSheet,
   FlatList,
-  ActivityIndicator,
+  TouchableOpacity,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { ProfileStackParamList } from '../../navigation/ProfileStack';
-import { TouchableOpacity } from 'react-native';
 
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'ReviewsReceived'>;
@@ -57,8 +56,6 @@ const MOCK_REVIEWS = [
 ];
 
 const ReviewsReceivedScreen = ({ navigation }: Props) => {
-  const [isLoading] = useState(false);
-
   const averageRating =
     MOCK_REVIEWS.reduce((sum, r) => sum + r.rating, 0) / MOCK_REVIEWS.length;
 
@@ -89,16 +86,14 @@ const ReviewsReceivedScreen = ({ navigation }: Props) => {
   const renderReview = ({ item }: { item: typeof MOCK_REVIEWS[0] }) => (
     <View style={styles.reviewCard}>
       <View style={styles.reviewHeader}>
-        <View style={styles.reviewerIconContainer}>
-          <Ionicons name="business-outline" size={22} color={colors.primary} />
+        <View style={styles.facilityIconContainer}>
+          <Ionicons name="add" size={20} color={colors.white} />
         </View>
         <View style={styles.reviewerInfo}>
           <Text style={styles.facilityName} numberOfLines={1}>
             {item.facility}
           </Text>
-          <Text style={styles.shiftTitle} numberOfLines={1}>
-            {item.shiftTitle}
-          </Text>
+          <Text style={styles.shiftTitle}>{item.shiftTitle}</Text>
         </View>
         <Text style={styles.reviewDate}>{formatDate(item.reviewedAt)}</Text>
       </View>
@@ -135,68 +130,62 @@ const ReviewsReceivedScreen = ({ navigation }: Props) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={22} color={colors.white} />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Reviews Received</Text>
         <View style={{ width: 40 }} />
       </View>
 
-      {isLoading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-        </View>
-      ) : (
-        <FlatList
-          data={MOCK_REVIEWS}
-          renderItem={renderReview}
-          keyExtractor={(item) => item.id}
-          contentContainerStyle={styles.listContainer}
-          showsVerticalScrollIndicator={false}
-          ListEmptyComponent={renderEmpty}
-          ListHeaderComponent={
-            MOCK_REVIEWS.length > 0 ? (
-              <View>
-                {/* Rating Summary */}
-                <View style={styles.ratingSummaryCard}>
-                  <View style={styles.ratingLeft}>
-                    <Text style={styles.averageRating}>
-                      {averageRating.toFixed(1)}
-                    </Text>
-                    {renderStars(Math.round(averageRating), 24)}
-                    <Text style={styles.totalReviews}>
-                      {MOCK_REVIEWS.length} reviews
-                    </Text>
-                  </View>
-
-                  <View style={styles.ratingBars}>
-                    {[5, 4, 3, 2, 1].map((star) => {
-                      const count = getRatingCount(star);
-                      const percentage = (count / MOCK_REVIEWS.length) * 100;
-                      return (
-                        <View key={star} style={styles.ratingBarRow}>
-                          <Text style={styles.ratingBarLabel}>{star}</Text>
-                          <Ionicons name="star" size={10} color="#FFD700" />
-                          <View style={styles.ratingBarBackground}>
-                            <View
-                              style={[
-                                styles.ratingBarFill,
-                                { width: `${percentage}%` },
-                              ]}
-                            />
-                          </View>
-                          <Text style={styles.ratingBarCount}>{count}</Text>
-                        </View>
-                      );
-                    })}
-                  </View>
+      <FlatList
+        data={MOCK_REVIEWS}
+        renderItem={renderReview}
+        keyExtractor={(item) => item.id}
+        contentContainerStyle={styles.listContainer}
+        showsVerticalScrollIndicator={false}
+        ListEmptyComponent={renderEmpty}
+        ListHeaderComponent={
+          MOCK_REVIEWS.length > 0 ? (
+            <View>
+              {/* Rating Summary */}
+              <View style={styles.ratingSummaryCard}>
+                <View style={styles.ratingLeft}>
+                  <Text style={styles.averageRating}>
+                    {averageRating.toFixed(1)}
+                  </Text>
+                  {renderStars(Math.round(averageRating), 22)}
+                  <Text style={styles.totalReviews}>
+                    {MOCK_REVIEWS.length} reviews
+                  </Text>
                 </View>
 
-                <Text style={styles.sectionTitle}>All Reviews</Text>
+                <View style={styles.ratingBars}>
+                  {[5, 4, 3, 2, 1].map((star) => {
+                    const count = getRatingCount(star);
+                    const percentage = (count / MOCK_REVIEWS.length) * 100;
+                    return (
+                      <View key={star} style={styles.ratingBarRow}>
+                        <Text style={styles.ratingBarLabel}>{star}</Text>
+                        <Ionicons name="star" size={10} color="#FFD700" />
+                        <View style={styles.ratingBarBackground}>
+                          <View
+                            style={[
+                              styles.ratingBarFill,
+                              { width: `${percentage}%` },
+                            ]}
+                          />
+                        </View>
+                        <Text style={styles.ratingBarCount}>{count}</Text>
+                      </View>
+                    );
+                  })}
+                </View>
               </View>
-            ) : null
-          }
-        />
-      )}
+
+              <Text style={styles.sectionTitle}>All Reviews</Text>
+            </View>
+          ) : null
+        }
+      />
     </View>
   );
 };
@@ -206,38 +195,28 @@ const styles = StyleSheet.create({
     flex: 1,
     backgroundColor: colors.background,
   },
-  loadingContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
   header: {
-    backgroundColor: colors.primary,
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: colors.background,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
-    color: colors.white,
+    fontFamily: typography.bold,
+    color: colors.textPrimary,
   },
   listContainer: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: 16,
     paddingBottom: 100,
   },
   ratingSummaryCard: {
@@ -253,11 +232,11 @@ const styles = StyleSheet.create({
   ratingLeft: {
     alignItems: 'center',
     justifyContent: 'center',
-    gap: 8,
+    gap: 6,
   },
   averageRating: {
     fontSize: 48,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   starsRow: {
@@ -266,6 +245,7 @@ const styles = StyleSheet.create({
   },
   totalReviews: {
     fontSize: typography.sm,
+    fontFamily: typography.medium,
     color: colors.textSecondary,
   },
   ratingBars: {
@@ -303,7 +283,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 12,
   },
@@ -314,23 +294,18 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     borderWidth: 1,
     borderColor: colors.border,
-    shadowColor: colors.black,
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 2,
   },
   reviewHeader: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
-    marginBottom: 12,
+    marginBottom: 10,
   },
-  reviewerIconContainer: {
+  facilityIconContainer: {
     width: 44,
     height: 44,
-    borderRadius: 22,
-    backgroundColor: colors.primaryLight,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
     justifyContent: 'center',
     alignItems: 'center',
   },
@@ -339,13 +314,14 @@ const styles = StyleSheet.create({
   },
   facilityName: {
     fontSize: typography.md,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
     color: colors.textPrimary,
     marginBottom: 2,
   },
   shiftTitle: {
     fontSize: typography.sm,
     color: colors.textSecondary,
+    fontFamily: typography.medium,
   },
   reviewDate: {
     fontSize: typography.xs,
@@ -359,7 +335,7 @@ const styles = StyleSheet.create({
   },
   reviewRatingText: {
     fontSize: typography.sm,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   reviewComment: {
@@ -376,16 +352,17 @@ const styles = StyleSheet.create({
   reviewerName: {
     fontSize: typography.sm,
     color: colors.textMuted,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   emptyContainer: {
     alignItems: 'center',
     paddingTop: 80,
     gap: 12,
+    paddingHorizontal: 24,
   },
   emptyTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   emptySubtitle: {
@@ -393,7 +370,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 22,
-    paddingHorizontal: 24,
   },
 });
 

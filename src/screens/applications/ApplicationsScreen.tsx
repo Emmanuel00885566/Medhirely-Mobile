@@ -319,7 +319,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.xxl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   bellButton: {
@@ -362,11 +362,11 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: typography.sm,
     color: colors.textMuted,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   tabTextActive: {
     color: colors.white,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
   listContainer: {
     paddingHorizontal: 16,
@@ -410,7 +410,7 @@ const styles = StyleSheet.create({
   },
   facilityName: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     flex: 1,
     marginRight: 8,
@@ -422,7 +422,7 @@ const styles = StyleSheet.create({
   },
   statusText: {
     fontSize: typography.xs,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
   roleText: {
     fontSize: typography.sm,
@@ -464,7 +464,7 @@ const styles = StyleSheet.create({
   withdrawButtonText: {
     fontSize: typography.sm,
     color: colors.error,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   chevronContainer: {
     width: 32,
@@ -485,7 +485,7 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   emptySubtitle: {
@@ -511,7 +511,7 @@ const styles = StyleSheet.create({
   },
   modalTitle: {
     fontSize: typography.xl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 8,
     textAlign: 'center',
@@ -525,7 +525,7 @@ const styles = StyleSheet.create({
   },
   modalHighlight: {
     color: colors.primary,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
   },
   modalWithdrawButton: {
     width: '100%',
@@ -538,7 +538,7 @@ const styles = StyleSheet.create({
   },
   modalWithdrawButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
   },
   modalCancelButton: {
@@ -550,7 +550,7 @@ const styles = StyleSheet.create({
   modalCancelButtonText: {
     fontSize: typography.md,
     color: colors.textSecondary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
 });
 

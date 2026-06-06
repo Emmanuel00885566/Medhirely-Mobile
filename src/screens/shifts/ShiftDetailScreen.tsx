@@ -22,11 +22,13 @@ type Props = {
 };
 
 const ShiftDetailScreen = ({ navigation, route }: Props) => {
-  const { shiftId } = route.params;
-  const [shift, setShift] = useState<any>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const { shiftId, shiftData } = route.params;
+  const parsedShift = shiftData ? JSON.parse(shiftData) : null;
+  const [shift, setShift] = useState<any>(parsedShift || null);
+  const [isLoading, setIsLoading] = useState(!parsedShift);
 
   useEffect(() => {
+    if (parsedShift) return;
     const loadShift = async () => {
       try {
         const data = await shiftsService.getShiftById(shiftId);
@@ -39,6 +41,14 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
     };
     loadShift();
   }, [shiftId]);
+
+  const handleApply = () => {
+    console.log('Apply button pressed!');
+    navigation.navigate('ConfirmApplication', {
+      shiftId: shift.id,
+      shiftData: JSON.stringify(shift),
+    });
+  };
 
   if (isLoading) {
     return (
@@ -56,7 +66,6 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
     );
   }
 
-  // Payment breakdown calculation
   const basePay = shift.payPerShift;
   const hourlyRate = shift.hourlyRate;
   const platformFee = 500;
@@ -73,6 +82,8 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
         >
           <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
+        <Text style={styles.headerTitle}>Shift Details</Text>
+        <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
@@ -82,7 +93,7 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
         {/* Facility Info */}
         <View style={styles.facilityCard}>
           <View style={styles.facilityIconContainer}>
-            <Ionicons name="add" size={28} color={colors.white} />
+            <Ionicons name="medical" size={28} color={colors.white} />
           </View>
           <View style={styles.facilityInfo}>
             <View style={styles.facilityNameRow}>
@@ -110,6 +121,14 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
           </View>
         </View>
 
+        {/* Urgent Badge */}
+        {shift.urgent && (
+          <View style={styles.urgentBadge}>
+            <Ionicons name="flash" size={14} color={colors.error} />
+            <Text style={styles.urgentText}>Urgent — Fast response needed</Text>
+          </View>
+        )}
+
         {/* Shift Detail Card */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Shift Detail</Text>
@@ -131,11 +150,25 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
             <View style={styles.detailRow}>
               <Ionicons name="cash-outline" size={18} color={colors.textSecondary} />
               <Text style={styles.detailText}>
-                ₦{shift.payPerShift.toLocaleString()}
+                ₦{shift.payPerShift.toLocaleString()} per shift
               </Text>
+            </View>
+            <View style={styles.detailRow}>
+              <Ionicons name="medkit-outline" size={18} color={colors.textSecondary} />
+              <Text style={styles.detailText}>{shift.specialty}</Text>
             </View>
           </View>
         </View>
+
+        {/* Notes */}
+        {shift.notes && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Notes</Text>
+            <View style={styles.notesCard}>
+              <Text style={styles.notesText}>{shift.notes}</Text>
+            </View>
+          </View>
+        )}
 
         {/* Response Time */}
         <View style={styles.responseCard}>
@@ -154,7 +187,7 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
                 Base Pay ({shift.duration})
               </Text>
               <Text style={styles.breakdownValue}>
-                {basePay.toLocaleString()}
+                ₦{basePay.toLocaleString()}
               </Text>
             </View>
             <View style={styles.breakdownRow}>
@@ -177,7 +210,7 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
             </View>
             <View style={styles.breakdownDivider} />
             <View style={styles.breakdownRow}>
-              <Text style={styles.youEarnedLabel}>You Earned</Text>
+              <Text style={styles.youEarnedLabel}>You Earn</Text>
               <Text style={styles.youEarnedValue}>
                 ₦{youEarned.toLocaleString()}
               </Text>
@@ -185,19 +218,17 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
           </View>
         </View>
 
-        <View style={{ height: 100 }} />
+        <View style={{ height: 190 }} />
       </ScrollView>
 
       {/* Bottom Apply Button */}
       <View style={styles.bottomContainer}>
         <TouchableOpacity
           style={styles.applyButton}
-          onPress={() =>
-            navigation.navigate('ConfirmApplication', { shiftId: shift.id })
-          }
+          onPress={handleApply}
           activeOpacity={0.85}
         >
-          <Text style={styles.applyButtonText}>Apply</Text>
+          <Text style={styles.applyButtonText}>Apply for this Shift</Text>
         </TouchableOpacity>
       </View>
     </View>
@@ -221,8 +252,16 @@ const styles = StyleSheet.create({
   header: {
     paddingTop: 60,
     paddingHorizontal: 16,
-    paddingBottom: 8,
+    paddingBottom: 12,
     backgroundColor: colors.background,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+  },
+  headerTitle: {
+    fontSize: typography.lg,
+    fontFamily: typography.bold,
+    color: colors.textPrimary,
   },
   backButton: {
     width: 40,
@@ -241,7 +280,7 @@ const styles = StyleSheet.create({
     backgroundColor: colors.white,
     borderRadius: 16,
     padding: 16,
-    marginBottom: 20,
+    marginBottom: 12,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -264,7 +303,7 @@ const styles = StyleSheet.create({
   },
   facilityName: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     flex: 1,
   },
@@ -291,19 +330,35 @@ const styles = StyleSheet.create({
   },
   payPerShiftAmount: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
-    color: colors.textPrimary,
+    fontFamily: typography.bold,
+    color: colors.primary,
   },
   payPerShiftLabel: {
     fontSize: typography.xs,
     color: colors.textSecondary,
+  },
+  urgentBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: '#FFF0F0',
+    borderRadius: 8,
+    padding: 10,
+    marginBottom: 12,
+    borderWidth: 1,
+    borderColor: colors.error,
+  },
+  urgentText: {
+    fontSize: typography.sm,
+    color: colors.error,
+    fontFamily: typography.medium,
   },
   section: {
     marginBottom: 16,
   },
   sectionTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 10,
   },
@@ -324,6 +379,18 @@ const styles = StyleSheet.create({
     fontSize: typography.md,
     color: colors.textPrimary,
     flex: 1,
+    lineHeight: 22,
+  },
+  notesCard: {
+    backgroundColor: colors.white,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  notesText: {
+    fontSize: typography.md,
+    color: colors.textSecondary,
     lineHeight: 22,
   },
   responseCard: {
@@ -358,11 +425,12 @@ const styles = StyleSheet.create({
   breakdownLabel: {
     fontSize: typography.md,
     color: colors.textSecondary,
+    fontFamily: typography.medium, 
   },
   breakdownValue: {
     fontSize: typography.md,
     color: colors.textPrimary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   breakdownDivider: {
     height: 1,
@@ -371,17 +439,17 @@ const styles = StyleSheet.create({
   },
   youEarnedLabel: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   youEarnedValue: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.primary,
   },
   bottomContainer: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 100,
     left: 0,
     right: 0,
     padding: 24,
@@ -403,7 +471,7 @@ const styles = StyleSheet.create({
   },
   applyButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
     letterSpacing: 0.5,
   },

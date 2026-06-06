@@ -15,6 +15,8 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileStackParamList } from '../../navigation/ProfileStack';
+import { workerService } from '../../services/workerService';
+
 
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>;
@@ -31,24 +33,18 @@ const SPECIALTIES = [
   'Anesthesiology',
 ];
 
-const AVAILABILITY = [
-  'Monday',
-  'Tuesday',
-  'Wednesday',
-  'Thursday',
-  'Friday',
-  'Saturday',
-  'Sunday',
-];
+const AVAILABILITY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const EditProfileScreen = ({ navigation }: Props) => {
   const { user, updateUser } = useAuth();
-  const [fullName, setFullName] = useState(user?.name || '');
+  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [email, setEmail] = useState(user?.email || '');
+  const [phone, setPhone] = useState('');
   const [bio, setBio] = useState('Experienced healthcare professional committed to quality patient care.');
   const [specialty, setSpecialty] = useState(user?.specialty || '');
   const [yearsOfExperience, setYearsOfExperience] = useState('5');
   const [preferredLocation, setPreferredLocation] = useState('Lagos, Nigeria');
-  const [selectedAvailability, setSelectedAvailability] = useState<string[]>(['Monday', 'Wednesday', 'Friday']);
+  const [selectedAvailability, setSelectedAvailability] = useState<string[]>(['Mon', 'Wed', 'Fri']);
   const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
@@ -59,24 +55,30 @@ const EditProfileScreen = ({ navigation }: Props) => {
   };
 
   const handleSave = async () => {
-    if (!fullName || !specialty || !yearsOfExperience) {
-      Alert.alert('Error', 'Please fill in all required fields');
-      return;
-    }
-    setIsLoading(true);
-    try {
-      await new Promise((res) => setTimeout(res, 1000));
-        updateUser({
-            name: fullName,
-            specialty: specialty,
-        });
-      Alert.alert('Success', 'Profile updated successfully!', [
-        { text: 'OK', onPress: () => navigation.goBack() },
-      ]);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!fullName || !specialty) {
+    Alert.alert('Error', 'Please fill in all required fields');
+    return;
+  }
+  setIsLoading(true);
+  try {
+    await workerService.updateProfile({
+      bio,
+      address: preferredLocation,
+      exprienceYears: yearsOfExperience,
+    });
+    updateUser({ name: fullName, specialty });
+    Alert.alert('Success', 'Profile updated successfully!', [
+      { text: 'OK', onPress: () => navigation.goBack() },
+    ]);
+  } catch (error: any) {
+    Alert.alert(
+      'Error',
+      error?.response?.data?.message || 'Failed to update profile. Please try again.'
+    );
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <View style={styles.container}>
@@ -86,7 +88,7 @@ const EditProfileScreen = ({ navigation }: Props) => {
           style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
-          <Ionicons name="arrow-back" size={22} color={colors.white} />
+          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Profile</Text>
         <View style={{ width: 40 }} />
@@ -116,34 +118,52 @@ const EditProfileScreen = ({ navigation }: Props) => {
         <Text style={styles.sectionTitle}>Personal Information</Text>
         <View style={styles.formCard}>
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name *</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="person-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                value={fullName}
-                onChangeText={setFullName}
-                placeholder="Enter your full name"
-                placeholderTextColor={colors.textMuted}
-                autoCapitalize="words"
-              />
-            </View>
+            <Text style={styles.label}>Full Name</Text>
+            <TextInput
+              style={styles.input}
+              value={fullName}
+              onChangeText={setFullName}
+              placeholder="Enter your full name"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Email Address</Text>
+            <TextInput
+              style={[styles.input, styles.disabledInput]}
+              value={email}
+              editable={false}
+              placeholder="Email"
+              placeholderTextColor={colors.textMuted}
+            />
+          </View>
+
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Phone Number</Text>
+            <TextInput
+              style={styles.input}
+              value={phone}
+              onChangeText={setPhone}
+              placeholder="+234 000 000 0000"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="phone-pad"
+            />
           </View>
 
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Bio</Text>
-            <View style={[styles.inputWrapper, styles.textAreaWrapper]}>
-              <TextInput
-                style={[styles.input, styles.textArea]}
-                value={bio}
-                onChangeText={setBio}
-                placeholder="Tell facilities about yourself..."
-                placeholderTextColor={colors.textMuted}
-                multiline
-                numberOfLines={4}
-                textAlignVertical="top"
-              />
-            </View>
+            <TextInput
+              style={[styles.input, styles.textArea]}
+              value={bio}
+              onChangeText={setBio}
+              placeholder="Tell facilities about yourself..."
+              placeholderTextColor={colors.textMuted}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+            />
           </View>
         </View>
 
@@ -152,13 +172,15 @@ const EditProfileScreen = ({ navigation }: Props) => {
         <View style={styles.formCard}>
           {/* Specialty */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Specialty *</Text>
+            <Text style={styles.label}>Specialty</Text>
             <TouchableOpacity
-              style={styles.inputWrapper}
+              style={styles.pickerButton}
               onPress={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
             >
-              <Ionicons name="medical-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-              <Text style={[styles.input, { paddingVertical: 12, color: specialty ? colors.textPrimary : colors.textMuted }]}>
+              <Text style={[
+                styles.pickerButtonText,
+                !specialty && { color: colors.textMuted }
+              ]}>
                 {specialty || 'Select your specialty'}
               </Text>
               <Ionicons
@@ -196,35 +218,27 @@ const EditProfileScreen = ({ navigation }: Props) => {
             )}
           </View>
 
-          {/* Years of Experience */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Years of Experience *</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="time-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                value={yearsOfExperience}
-                onChangeText={setYearsOfExperience}
-                placeholder="e.g. 5"
-                placeholderTextColor={colors.textMuted}
-                keyboardType="numeric"
-              />
-            </View>
+            <Text style={styles.label}>Years of Experience</Text>
+            <TextInput
+              style={styles.input}
+              value={yearsOfExperience}
+              onChangeText={setYearsOfExperience}
+              placeholder="e.g. 5"
+              placeholderTextColor={colors.textMuted}
+              keyboardType="numeric"
+            />
           </View>
 
-          {/* Preferred Location */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Preferred Location</Text>
-            <View style={styles.inputWrapper}>
-              <Ionicons name="location-outline" size={18} color={colors.textMuted} style={styles.inputIcon} />
-              <TextInput
-                style={styles.input}
-                value={preferredLocation}
-                onChangeText={setPreferredLocation}
-                placeholder="e.g. Lagos, Nigeria"
-                placeholderTextColor={colors.textMuted}
-              />
-            </View>
+            <TextInput
+              style={styles.input}
+              value={preferredLocation}
+              onChangeText={setPreferredLocation}
+              placeholder="e.g. Lagos, Nigeria"
+              placeholderTextColor={colors.textMuted}
+            />
           </View>
         </View>
 
@@ -248,7 +262,7 @@ const EditProfileScreen = ({ navigation }: Props) => {
                   styles.availabilityChipText,
                   selectedAvailability.includes(day) && styles.availabilityChipTextActive,
                 ]}>
-                  {day.slice(0, 3)}
+                  {day}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -281,32 +295,27 @@ const styles = StyleSheet.create({
     backgroundColor: colors.background,
   },
   header: {
-    backgroundColor: colors.primary,
-    paddingTop: 60,
-    paddingBottom: 20,
-    paddingHorizontal: 24,
     flexDirection: 'row',
-    alignItems: 'center',
     justifyContent: 'space-between',
-    borderBottomLeftRadius: 32,
-    borderBottomRightRadius: 32,
+    alignItems: 'center',
+    paddingTop: 60,
+    paddingBottom: 16,
+    paddingHorizontal: 16,
+    backgroundColor: colors.background,
   },
   backButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
-    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
     alignItems: 'center',
   },
   headerTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
-    color: colors.white,
+    fontFamily: typography.bold,
+    color: colors.textPrimary,
   },
   content: {
-    paddingHorizontal: 24,
-    paddingTop: 24,
+    paddingHorizontal: 16,
   },
   avatarSection: {
     alignItems: 'center',
@@ -324,7 +333,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 36,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
   },
   avatarEditButton: {
@@ -343,11 +352,11 @@ const styles = StyleSheet.create({
   changePhotoText: {
     fontSize: typography.sm,
     color: colors.primary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   sectionTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 12,
   },
@@ -364,34 +373,42 @@ const styles = StyleSheet.create({
   },
   label: {
     fontSize: typography.sm,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
     color: colors.textPrimary,
     marginBottom: 8,
   },
-  inputWrapper: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: colors.inputBackground,
+  input: {
+    backgroundColor: colors.background,
     borderRadius: 12,
     borderWidth: 1,
     borderColor: colors.border,
     paddingHorizontal: 14,
-    minHeight: 52,
-  },
-  textAreaWrapper: {
-    alignItems: 'flex-start',
-    paddingVertical: 12,
-  },
-  inputIcon: {
-    marginRight: 10,
-  },
-  input: {
-    flex: 1,
+    height: 52,
     fontSize: typography.md,
     color: colors.textPrimary,
   },
+  disabledInput: {
+    opacity: 0.6,
+  },
   textArea: {
-    minHeight: 80,
+    height: 100,
+    paddingTop: 14,
+    textAlignVertical: 'top',
+  },
+  pickerButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    paddingHorizontal: 14,
+    height: 52,
+  },
+  pickerButtonText: {
+    fontSize: typography.md,
+    color: colors.textPrimary,
   },
   pickerDropdown: {
     backgroundColor: colors.white,
@@ -419,7 +436,7 @@ const styles = StyleSheet.create({
   },
   pickerItemTextActive: {
     color: colors.primary,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
   },
   availabilityHint: {
     fontSize: typography.sm,
@@ -435,7 +452,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 16,
     paddingVertical: 10,
     borderRadius: 20,
-    backgroundColor: colors.inputBackground,
+    backgroundColor: colors.background,
     borderWidth: 1,
     borderColor: colors.border,
   },
@@ -446,11 +463,11 @@ const styles = StyleSheet.create({
   availabilityChipText: {
     fontSize: typography.sm,
     color: colors.textSecondary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   availabilityChipTextActive: {
     color: colors.white,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
   saveButton: {
     backgroundColor: colors.primary,
@@ -469,7 +486,7 @@ const styles = StyleSheet.create({
   },
   saveButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
     letterSpacing: 0.5,
   },

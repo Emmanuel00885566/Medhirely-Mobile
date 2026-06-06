@@ -89,7 +89,7 @@ const styles = StyleSheet.create({
   },
   title: {
     fontSize: typography.xxl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.primary,
     textAlign: 'center',
     marginBottom: 12,
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
   },
   highlight: {
     color: colors.primary,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
   },
   profileButton: {
     width: '100%',
@@ -128,7 +128,7 @@ const styles = StyleSheet.create({
   },
   profileButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
     letterSpacing: 0.5,
   },
@@ -148,7 +148,7 @@ const styles = StyleSheet.create({
   devButtonText: {
     fontSize: typography.sm,
     color: colors.primary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   logoutButton: {
     paddingVertical: 8,

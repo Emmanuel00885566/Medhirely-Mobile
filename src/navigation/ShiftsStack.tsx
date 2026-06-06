@@ -6,8 +6,8 @@ import ConfirmApplicationScreen from '../screens/shifts/ConfirmApplicationScreen
 
 export type ShiftsStackParamList = {
   ShiftsFeed: undefined;
-  ShiftDetail: { shiftId: string };
-  ConfirmApplication: { shiftId: string };
+  ShiftDetail: { shiftId: string; shiftData?: string };
+  ConfirmApplication: { shiftId: string; shiftData?: string };
 };
 
 const Stack = createNativeStackNavigator<ShiftsStackParamList>();

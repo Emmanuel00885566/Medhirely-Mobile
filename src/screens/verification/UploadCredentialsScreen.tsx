@@ -228,12 +228,13 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.xxl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.primary,
   },
   logoutText: {
     fontSize: typography.sm,
     color: colors.textSecondary,
+    fontFamily: typography.medium,
   },
   headerSubtitle: {
     fontSize: typography.md,
@@ -278,13 +279,14 @@ const styles = StyleSheet.create({
   },
   documentTitle: {
     fontSize: typography.md,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
     color: colors.textPrimary,
     marginBottom: 2,
   },
   documentSubtitle: {
     fontSize: typography.sm,
     color: colors.textSecondary,
+    fontFamily: typography.medium,
   },
   uploadButton: {
     width: 40,
@@ -330,7 +332,7 @@ const styles = StyleSheet.create({
   },
   submitButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
     letterSpacing: 0.5,
   },
@@ -339,6 +341,7 @@ const styles = StyleSheet.create({
   },
   helpLinkText: {
     fontSize: typography.md,
+    fontFamily: typography.medium,
     color: colors.primary,
     textDecorationLine: 'underline',
   },

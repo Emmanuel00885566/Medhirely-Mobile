@@ -197,7 +197,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.xl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   content: {
@@ -217,7 +217,7 @@ const styles = StyleSheet.create({
   },
   balanceAmount: {
     fontSize: 32,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 8,
   },
@@ -231,7 +231,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 12,
   },
@@ -260,7 +260,7 @@ const styles = StyleSheet.create({
   },
   accountNumber: {
     fontSize: typography.md,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
     color: colors.textPrimary,
     marginBottom: 2,
   },
@@ -289,11 +289,11 @@ const styles = StyleSheet.create({
   quickAmountText: {
     fontSize: typography.sm,
     color: colors.textSecondary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   quickAmountTextActive: {
     color: colors.white,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
   amountInputContainer: {
     backgroundColor: colors.white,
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   },
   amountInput: {
     fontSize: typography.xl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   withdrawButton: {
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
   },
   withdrawButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
     letterSpacing: 0.5,
   },

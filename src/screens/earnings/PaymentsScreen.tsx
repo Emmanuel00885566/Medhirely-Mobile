@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.xl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   tabsContainer: {
@@ -267,11 +267,11 @@ const styles = StyleSheet.create({
   tabText: {
     fontSize: typography.sm,
     color: colors.textSecondary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   tabTextActive: {
     color: colors.white,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
   groupSection: {
     paddingHorizontal: 16,
@@ -279,7 +279,7 @@ const styles = StyleSheet.create({
   },
   groupTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 12,
   },
@@ -306,7 +306,7 @@ const styles = StyleSheet.create({
   },
   transactionFacility: {
     fontSize: typography.md,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
     color: colors.textPrimary,
     marginBottom: 2,
   },
@@ -325,12 +325,12 @@ const styles = StyleSheet.create({
   },
   transactionAmount: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   transactionStatus: {
     fontSize: typography.xs,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
   emptyContainer: {
     alignItems: 'center',
@@ -340,11 +340,12 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     fontSize: typography.lg,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   emptySubtitle: {
     fontSize: typography.md,
+    fontFamily: typography.medium,
     color: colors.textSecondary,
     textAlign: 'center',
   },

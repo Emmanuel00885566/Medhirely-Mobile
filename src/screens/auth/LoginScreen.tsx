@@ -32,20 +32,21 @@ const LoginScreen = ({ navigation }: Props) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleLogin = async () => {
-    if (!email || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
-    setIsLoading(true);
-    try {
-      await authService.login(email, password);
-      await login(email, password);
-    } catch (error) {
-      Alert.alert('Login Failed', 'Invalid email or password');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (!email || !password) {
+    Alert.alert('Error', 'Please fill in all fields');
+    return;
+  }
+
+  setIsLoading(true);
+
+  try {
+    await login(email, password);
+  } catch (error) {
+    Alert.alert('Login Failed', 'Invalid email or password');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <KeyboardAvoidingView
@@ -218,7 +219,7 @@ export const styles = StyleSheet.create({
 
   welcomeText: {
     fontSize: typography.xl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 4,
   },
@@ -234,7 +235,7 @@ export const styles = StyleSheet.create({
 
   label: {
     fontSize: typography.sm,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
     color: colors.textPrimary,
     marginBottom: 8,
   },
@@ -275,7 +276,7 @@ export const styles = StyleSheet.create({
   forgotPasswordText: {
     fontSize: typography.sm,
     color: colors.primary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
 
   loginButton: {
@@ -298,7 +299,7 @@ export const styles = StyleSheet.create({
 
   loginButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
     letterSpacing: 0.5,
   },
@@ -342,7 +343,7 @@ export const styles = StyleSheet.create({
   socialButtonText: {
     fontSize: typography.md,
     color: colors.textPrimary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
 
   signupRow: {
@@ -361,7 +362,7 @@ export const styles = StyleSheet.create({
   signupLink: {
     fontSize: typography.sm,
     color: colors.primary,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
 
   cookieText: {
@@ -373,7 +374,7 @@ export const styles = StyleSheet.create({
 
   learnMore: {
     color: colors.primary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
 });
 

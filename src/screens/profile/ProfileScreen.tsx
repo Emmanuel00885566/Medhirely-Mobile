@@ -129,16 +129,18 @@ const ProfileScreen = () => {
           {/* Avatar */}
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>
-              {user?.name?.charAt(0).toUpperCase()}
-            </Text>
+  {user?.firstName?.charAt(0).toUpperCase() || 'U'}
+              </Text>
             <TouchableOpacity style={styles.avatarEditButton}>
               <Ionicons name="camera" size={14} color={colors.white} />
             </TouchableOpacity>
           </View>
 
-          <Text style={styles.profileName}>{user?.name}</Text>
+          <Text style={styles.profileName}>{user?.firstName} {user?.lastName}</Text>
           <Text style={styles.profileSpecialty}>{user?.specialty}</Text>
-
+        <Text style={styles.profileEmail}>
+  {user?.email}
+</Text>
           {/* Verification Badge */}
           <View style={[
             styles.verificationBadge,
@@ -227,7 +229,7 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     fontSize: typography.xxl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
   },
   bellButton: {
@@ -272,7 +274,7 @@ const styles = StyleSheet.create({
   },
   avatarText: {
     fontSize: 36,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
   },
   avatarEditButton: {
@@ -290,14 +292,14 @@ const styles = StyleSheet.create({
   },
   profileName: {
     fontSize: typography.xl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 4,
   },
   profileSpecialty: {
     fontSize: typography.md,
     color: colors.primary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
     marginBottom: 12,
   },
   verificationBadge: {
@@ -311,7 +313,7 @@ const styles = StyleSheet.create({
   },
   verificationText: {
     fontSize: typography.sm,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
   },
   statsRow: {
     flexDirection: 'row',
@@ -326,7 +328,7 @@ const styles = StyleSheet.create({
   },
   statValue: {
     fontSize: typography.xl,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 4,
   },
@@ -341,7 +343,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 12,
   },
@@ -368,11 +370,16 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
   },
+  profileEmail: {
+  fontSize: typography.sm,
+  color: colors.textSecondary,
+  marginBottom: 12,
+},
   menuTitle: {
     flex: 1,
     fontSize: typography.md,
     color: colors.textPrimary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   menuDivider: {
     height: 1,
@@ -399,7 +406,7 @@ const styles = StyleSheet.create({
   },
   logoutText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.error,
   },
 });

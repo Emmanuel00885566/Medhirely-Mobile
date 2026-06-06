@@ -281,7 +281,7 @@ const styles = StyleSheet.create({
   },
   facilityName: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     flex: 1,
     marginRight: 8,
@@ -294,7 +294,7 @@ const styles = StyleSheet.create({
   },
   pendingBadgeText: {
     fontSize: typography.xs,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.warning,
   },
   specialtyText: {
@@ -316,7 +316,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     marginBottom: 10,
   },
@@ -352,7 +352,7 @@ const styles = StyleSheet.create({
     flex: 1,
     fontSize: typography.sm,
     color: colors.success,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
   contactCard: {
     flexDirection: 'row',
@@ -371,7 +371,7 @@ const styles = StyleSheet.create({
   },
   contactNumber: {
     fontSize: typography.md,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
     color: colors.textPrimary,
   },
   messageButton: {
@@ -413,7 +413,7 @@ const styles = StyleSheet.create({
   },
   infoValue: {
     fontSize: typography.md,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
     color: colors.textPrimary,
   },
   infoDivider: {
@@ -443,7 +443,7 @@ const styles = StyleSheet.create({
   },
   directionsButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.semiBold,
+    fontFamily: typography.semiBold,
     color: colors.textPrimary,
   },
   checkInButton: {
@@ -459,7 +459,7 @@ const styles = StyleSheet.create({
   },
   checkInButtonText: {
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.white,
   },
 });

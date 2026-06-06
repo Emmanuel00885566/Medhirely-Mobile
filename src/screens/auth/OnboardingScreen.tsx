@@ -226,7 +226,7 @@ const styles = StyleSheet.create({
 
   title: {
     fontSize: 24,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
     color: colors.textPrimary,
     textAlign: 'center',
     marginBottom: 12,
@@ -251,7 +251,7 @@ const styles = StyleSheet.create({
   skipText: {
     color: colors.textSecondary,
     fontSize: typography.md,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
 
   indicatorWrapper: {
@@ -286,7 +286,7 @@ const styles = StyleSheet.create({
   backText: {
     fontSize: typography.md,
     color: colors.primary,
-    fontWeight: typography.medium,
+    fontFamily: typography.medium,
   },
 
   nextButton: {
@@ -299,6 +299,6 @@ const styles = StyleSheet.create({
   nextButtonText: {
     color: colors.white,
     fontSize: typography.md,
-    fontWeight: typography.bold,
+    fontFamily: typography.bold,
   },
 });
