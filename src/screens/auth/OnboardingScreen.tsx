@@ -77,23 +77,20 @@ const OnboardingScreen = ({ navigation }: Props) => {
   };
 
   const renderSlide = ({ item }: { item: (typeof SLIDES)[0] }) => {
-    return (
-      <View style={styles.slide}>
-        <View style={styles.imageWrapper}>
-          <Image
-            source={item.image}
-            style={styles.image}
-            resizeMode="contain"
-          />
-        </View>
-
-        <View style={styles.textContainer}>
-          <Text style={styles.title}>{item.title}</Text>
-          <Text style={styles.description}>{item.description}</Text>
-        </View>
+  return (
+    <View style={styles.slide}>
+      <Image
+        source={item.image}
+        style={styles.image}
+        resizeMode="contain"
+      />
+      <View style={styles.textContainer}>
+        <Text style={styles.title}>{item.title}</Text>
+        <Text style={styles.description}>{item.description}</Text>
       </View>
-    );
-  };
+    </View>
+  );
+};
 
   const renderDots = () => {
     return (
@@ -197,25 +194,12 @@ const styles = StyleSheet.create({
     paddingBottom: 160,
   },
 
-  imageWrapper: {
-    width: width * 0.70,
-    height: width * 0.70,
-    borderRadius: (width * 0.60) / 2,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 36,
-    shadowColor: colors.primary,
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.10,
-    shadowRadius: 16,
-    elevation: 4,
-  },
 
   image: {
-    width: '75%',
-    height: '75%',
-  },
+  width: width * 0.75,
+  height: height * 0.38,
+  marginBottom: 36,
+},
 
   textContainer: {
     width: '100%',

@@ -17,7 +17,6 @@ import { useAuth } from '../../context/AuthContext';
 import { ProfileStackParamList } from '../../navigation/ProfileStack';
 import { workerService } from '../../services/workerService';
 
-
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>;
 };
@@ -37,13 +36,14 @@ const AVAILABILITY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const EditProfileScreen = ({ navigation }: Props) => {
   const { user, updateUser } = useAuth();
-  const [fullName, setFullName] = useState(user?.fullName || '');
+  const [firstName, setFirstName] = useState(user?.firstName || '');
+  const [lastName, setLastName] = useState(user?.lastName || '');
   const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState('');
-  const [bio, setBio] = useState('Experienced healthcare professional committed to quality patient care.');
+  const [phone, setPhone] = useState(user?.phoneNumber || '');
+  const [bio, setBio] = useState(user?.bio || '');
   const [specialty, setSpecialty] = useState(user?.specialty || '');
-  const [yearsOfExperience, setYearsOfExperience] = useState('5');
-  const [preferredLocation, setPreferredLocation] = useState('Lagos, Nigeria');
+  const [yearsOfExperience, setYearsOfExperience] = useState(user?.exprienceYears || '');
+  const [preferredLocation, setPreferredLocation] = useState(user?.address || '');
   const [selectedAvailability, setSelectedAvailability] = useState<string[]>(['Mon', 'Wed', 'Fri']);
   const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
@@ -55,30 +55,39 @@ const EditProfileScreen = ({ navigation }: Props) => {
   };
 
   const handleSave = async () => {
-  if (!fullName || !specialty) {
-    Alert.alert('Error', 'Please fill in all required fields');
-    return;
-  }
-  setIsLoading(true);
-  try {
-    await workerService.updateProfile({
-      bio,
-      address: preferredLocation,
-      exprienceYears: yearsOfExperience,
-    });
-    updateUser({ name: fullName, specialty });
-    Alert.alert('Success', 'Profile updated successfully!', [
-      { text: 'OK', onPress: () => navigation.goBack() },
-    ]);
-  } catch (error: any) {
-    Alert.alert(
-      'Error',
-      error?.response?.data?.message || 'Failed to update profile. Please try again.'
-    );
-  } finally {
-    setIsLoading(false);
-  }
-};
+    if (!firstName || !lastName) {
+      Alert.alert('Error', 'Please fill in all required fields');
+      return;
+    }
+    setIsLoading(true);
+    try {
+      await workerService.updateProfile({
+        bio,
+        address: preferredLocation,
+        exprienceYears: yearsOfExperience,
+      });
+
+      const updatedProfile = await workerService.getProfile();
+      updateUser({
+        firstName,
+        lastName,
+        specialty,
+        phoneNumber: phone,
+        ...updatedProfile,
+      });
+
+      Alert.alert('Success', 'Profile updated successfully!', [
+        { text: 'OK', onPress: () => navigation.goBack() },
+      ]);
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Failed to update profile. Please try again.'
+      );
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   return (
     <View style={styles.container}>
@@ -103,7 +112,7 @@ const EditProfileScreen = ({ navigation }: Props) => {
         <View style={styles.avatarSection}>
           <View style={styles.avatarContainer}>
             <Text style={styles.avatarText}>
-              {fullName?.charAt(0).toUpperCase()}
+              {firstName?.charAt(0).toUpperCase()}
             </Text>
             <TouchableOpacity style={styles.avatarEditButton}>
               <Ionicons name="camera" size={14} color={colors.white} />
@@ -117,18 +126,34 @@ const EditProfileScreen = ({ navigation }: Props) => {
         {/* Personal Info */}
         <Text style={styles.sectionTitle}>Personal Information</Text>
         <View style={styles.formCard}>
+
+          {/* First Name */}
           <View style={styles.inputGroup}>
-            <Text style={styles.label}>Full Name</Text>
+            <Text style={styles.label}>First Name</Text>
             <TextInput
               style={styles.input}
-              value={fullName}
-              onChangeText={setFullName}
-              placeholder="Enter your full name"
+              value={firstName}
+              onChangeText={setFirstName}
+              placeholder="Enter your first name"
               placeholderTextColor={colors.textMuted}
               autoCapitalize="words"
             />
           </View>
 
+          {/* Last Name */}
+          <View style={styles.inputGroup}>
+            <Text style={styles.label}>Last Name</Text>
+            <TextInput
+              style={styles.input}
+              value={lastName}
+              onChangeText={setLastName}
+              placeholder="Enter your last name"
+              placeholderTextColor={colors.textMuted}
+              autoCapitalize="words"
+            />
+          </View>
+
+          {/* Email */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email Address</Text>
             <TextInput
@@ -140,6 +165,7 @@ const EditProfileScreen = ({ navigation }: Props) => {
             />
           </View>
 
+          {/* Phone */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Phone Number</Text>
             <TextInput
@@ -152,6 +178,7 @@ const EditProfileScreen = ({ navigation }: Props) => {
             />
           </View>
 
+          {/* Bio */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Bio</Text>
             <TextInput
@@ -218,6 +245,7 @@ const EditProfileScreen = ({ navigation }: Props) => {
             )}
           </View>
 
+          {/* Years of Experience */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Years of Experience</Text>
             <TextInput
@@ -230,6 +258,7 @@ const EditProfileScreen = ({ navigation }: Props) => {
             />
           </View>
 
+          {/* Preferred Location */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Preferred Location</Text>
             <TextInput
@@ -479,7 +508,8 @@ const styles = StyleSheet.create({
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.3,
     shadowRadius: 8,
-    elevation: 4,
+    elevation: 9,
+    bottom: 10,
   },
   buttonDisabled: {
     opacity: 0.7,

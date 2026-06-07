@@ -20,6 +20,7 @@ type User = {
   bio?: string;
   address?: string;
   exprienceYears?: string;
+  verificationStatus?: string;
 };
 
 type AuthContextType = {
@@ -124,6 +125,7 @@ export const AuthProvider = ({
         exprienceYears: String(
           profile.experienceYears ?? ''
         ),
+        verificationStatus: profile.verificationStatus,
       };
 
       // Save to context

@@ -14,12 +14,29 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileStackParamList } from '../../navigation/ProfileStack';
+import { workerService } from '../../services/workerService';
+import { useFocusEffect } from '@react-navigation/native';
+import { useCallback } from 'react';
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
 const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp>();
-  const { user, logout } = useAuth();
+  const { user, logout, updateUser } = useAuth();
+
+  useFocusEffect(
+  useCallback(() => {
+    const refreshProfile = async () => {
+      try {
+        const updatedProfile = await workerService.getProfile();
+        updateUser({ ...updatedProfile });
+      } catch (error) {
+        console.log('Error refreshing profile:', error);
+      }
+    };
+    refreshProfile();
+  }, [])
+);
 
   const handleLogout = () => {
     Alert.alert(

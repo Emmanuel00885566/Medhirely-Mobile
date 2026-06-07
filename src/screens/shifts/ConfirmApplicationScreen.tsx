@@ -157,9 +157,9 @@ const ConfirmApplicationScreen = ({ navigation, route }: Props) => {
 
           <TouchableOpacity
             style={styles.trackButton}
-            onPress={() => navigation.navigate('ShiftsFeed')}
+            onPress={() => navigation.getParent()?.navigate('Applications')}
             activeOpacity={0.85}
-          >
+>
             <Text style={styles.trackButtonText}>Track Application</Text>
           </TouchableOpacity>
         </View>
