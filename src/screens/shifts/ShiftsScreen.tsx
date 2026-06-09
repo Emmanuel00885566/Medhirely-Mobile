@@ -9,6 +9,8 @@ import {
   ActivityIndicator,
   RefreshControl,
   Image,
+  Modal,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -22,6 +24,15 @@ import { ShiftsStackParamList } from '../../navigation/ShiftsStack';
 type NavigationProp = NativeStackNavigationProp<ShiftsStackParamList, 'ShiftsFeed'>;
 
 const TABS = ['For you', 'Current'];
+const SPECIALTIES = ['All', 'Nurse', 'Doctor', 'Therapist', 'Technician', 'Other'];
+const SHIFT_TYPES = ['All', 'Day Shift', 'Night Shift'];
+const PAY_RANGES = [
+  { label: 'All', min: 0 },
+  { label: '₦10,000+', min: 10000 },
+  { label: '₦25,000+', min: 25000 },
+  { label: '₦50,000+', min: 50000 },
+  { label: '₦100,000+', min: 100000 },
+];
 
 const ShiftsScreen = () => {
   const { user } = useAuth();
@@ -32,20 +43,25 @@ const ShiftsScreen = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [activeTab, setActiveTab] = useState('For you');
   const [bookmarked, setBookmarked] = useState<string[]>([]);
+  const [showFilter, setShowFilter] = useState(false);
 
-const loadShifts = async () => {
-  try {
-    const data = await shiftsService.getShifts();
-    console.log('Shifts data:', JSON.stringify(data, null, 2));
-    setShifts(Array.isArray(data) ? data : []);
-  } catch (error) {
-    console.log('Error loading shifts:', error);
-    setShifts([]);
-  } finally {
-    setIsLoading(false);
-    setIsRefreshing(false);
-  }
-};
+  // Filter states
+  const [selectedSpecialty, setSelectedSpecialty] = useState('All');
+  const [selectedShiftType, setSelectedShiftType] = useState('All');
+  const [selectedPayRange, setSelectedPayRange] = useState(0);
+
+  const loadShifts = async () => {
+    try {
+      const data = await shiftsService.getShifts();
+      setShifts(Array.isArray(data) ? data : []);
+    } catch (error) {
+      console.log('Error loading shifts:', error);
+      setShifts([]);
+    } finally {
+      setIsLoading(false);
+      setIsRefreshing(false);
+    }
+  };
 
   useEffect(() => {
     loadShifts();
@@ -62,17 +78,150 @@ const loadShifts = async () => {
     );
   };
 
-  const filteredShifts = shifts.filter((s) =>
-    searchQuery
+  const clearFilters = () => {
+    setSelectedSpecialty('All');
+    setSelectedShiftType('All');
+    setSelectedPayRange(0);
+  };
+
+  const activeFilterCount = [
+    selectedSpecialty !== 'All',
+    selectedShiftType !== 'All',
+    selectedPayRange > 0,
+  ].filter(Boolean).length;
+
+  const filteredShifts = shifts.filter((s) => {
+    const matchesSearch = searchQuery
       ? s.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
         s.facility.toLowerCase().includes(searchQuery.toLowerCase())
-      : true
+      : true;
+
+    const matchesSpecialty =
+      selectedSpecialty === 'All' ||
+      s.specialty?.toLowerCase() === selectedSpecialty.toLowerCase();
+
+    const matchesShiftType =
+      selectedShiftType === 'All' || s.shiftType === selectedShiftType;
+
+    const matchesPay = s.payPerShift >= selectedPayRange;
+
+    return matchesSearch && matchesSpecialty && matchesShiftType && matchesPay;
+  });
+
+  const renderFilterModal = () => (
+    <Modal
+      visible={showFilter}
+      animationType="slide"
+      transparent
+      onRequestClose={() => setShowFilter(false)}
+    >
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContainer}>
+          {/* Modal Header */}
+          <View style={styles.modalHeader}>
+            <Text style={styles.modalTitle}>Filter Shifts</Text>
+            <TouchableOpacity onPress={() => setShowFilter(false)}>
+              <Ionicons name="close" size={24} color={colors.textPrimary} />
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView showsVerticalScrollIndicator={false}>
+            {/* Specialty */}
+            <Text style={styles.filterSectionTitle}>Specialty</Text>
+            <View style={styles.filterChipsRow}>
+              {SPECIALTIES.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={[
+                    styles.filterChip,
+                    selectedSpecialty === item && styles.filterChipActive,
+                  ]}
+                  onPress={() => setSelectedSpecialty(item)}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    selectedSpecialty === item && styles.filterChipTextActive,
+                  ]}>
+                    {item}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Shift Type */}
+            <Text style={styles.filterSectionTitle}>Shift Type</Text>
+            <View style={styles.filterChipsRow}>
+              {SHIFT_TYPES.map((item) => (
+                <TouchableOpacity
+                  key={item}
+                  style={[
+                    styles.filterChip,
+                    selectedShiftType === item && styles.filterChipActive,
+                  ]}
+                  onPress={() => setSelectedShiftType(item)}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    selectedShiftType === item && styles.filterChipTextActive,
+                  ]}>
+                    {item === 'Night Shift' ? '🌙 Night Shift' : item === 'Day Shift' ? '☀️ Day Shift' : item}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+
+            {/* Pay Range */}
+            <Text style={styles.filterSectionTitle}>Minimum Pay</Text>
+            <View style={styles.filterChipsRow}>
+              {PAY_RANGES.map((item) => (
+                <TouchableOpacity
+                  key={item.label}
+                  style={[
+                    styles.filterChip,
+                    selectedPayRange === item.min && styles.filterChipActive,
+                  ]}
+                  onPress={() => setSelectedPayRange(item.min)}
+                >
+                  <Text style={[
+                    styles.filterChipText,
+                    selectedPayRange === item.min && styles.filterChipTextActive,
+                  ]}>
+                    {item.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </View>
+          </ScrollView>
+
+          {/* Buttons */}
+          <View style={styles.modalButtons}>
+            <TouchableOpacity
+              style={styles.clearButton}
+              onPress={clearFilters}
+            >
+              <Text style={styles.clearButtonText}>Clear All</Text>
+            </TouchableOpacity>
+            <TouchableOpacity
+              style={styles.applyFilterButton}
+              onPress={() => setShowFilter(false)}
+            >
+              <Text style={styles.applyFilterButtonText}>
+                Show {filteredShifts.length} Shifts
+              </Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+      </View>
+    </Modal>
   );
 
   const renderShiftCard = ({ item }: { item: any }) => (
     <TouchableOpacity
       style={styles.shiftCard}
-      onPress={() => navigation.navigate('ShiftDetail', { shiftId: item.id, shiftData: JSON.stringify(item) })}
+      onPress={() => navigation.navigate('ShiftDetail', {
+        shiftId: item.id,
+        shiftData: JSON.stringify(item)
+      })}
       activeOpacity={0.85}
     >
       {/* Card Top Row */}
@@ -145,7 +294,10 @@ const loadShifts = async () => {
           style={styles.applyButton}
           onPress={(e) => {
             e.stopPropagation();
-            navigation.navigate('ShiftDetail', { shiftId: item.id, shiftData: JSON.stringify(item) });
+            navigation.navigate('ShiftDetail', {
+              shiftId: item.id,
+              shiftData: JSON.stringify(item)
+            });
           }}
           activeOpacity={0.85}
         >
@@ -168,13 +320,15 @@ const loadShifts = async () => {
       <Ionicons name="briefcase-outline" size={64} color={colors.border} />
       <Text style={styles.emptyTitle}>No shifts found</Text>
       <Text style={styles.emptySubtitle}>
-        Try adjusting your search or check back later
+        Try adjusting your search or filters
       </Text>
     </View>
   );
 
   return (
     <View style={styles.container}>
+      {renderFilterModal()}
+
       {isLoading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -225,12 +379,12 @@ const loadShifts = async () => {
                   </View>
                 </View>
                 <TouchableOpacity
-  style={styles.notificationButton}
-  onPress={() => navigation.navigate('Notifications')}
->
-  <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
-  <View style={styles.notificationDot} />
-</TouchableOpacity>
+                  style={styles.notificationButton}
+                  onPress={() => navigation.navigate('Notifications')}
+                >
+                  <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
+                  <View style={styles.notificationDot} />
+                </TouchableOpacity>
               </View>
 
               {/* Tabs + Filter */}
@@ -252,8 +406,16 @@ const loadShifts = async () => {
                     </TouchableOpacity>
                   ))}
                 </View>
-                <TouchableOpacity style={styles.filterButton}>
+                <TouchableOpacity
+                  style={styles.filterButton}
+                  onPress={() => setShowFilter(true)}
+                >
                   <Ionicons name="options-outline" size={22} color={colors.textPrimary} />
+                  {activeFilterCount > 0 && (
+                    <View style={styles.filterBadge}>
+                      <Text style={styles.filterBadgeText}>{activeFilterCount}</Text>
+                    </View>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -280,7 +442,7 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
   },
   listContainer: {
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   searchBar: {
     flexDirection: 'row',
@@ -378,6 +540,23 @@ const styles = StyleSheet.create({
   },
   filterButton: {
     paddingBottom: 12,
+    position: 'relative',
+  },
+  filterBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    width: 16,
+    height: 16,
+    borderRadius: 8,
+    backgroundColor: colors.error,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  filterBadgeText: {
+    fontSize: 10,
+    color: colors.white,
+    fontFamily: typography.bold,
   },
   shiftCard: {
     backgroundColor: colors.white,
@@ -508,8 +687,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   verifiedIcon: {
-    width: 45,
-    height: 45,
+    width: 20,
+    height: 20,
   },
   applyButton: {
     backgroundColor: colors.primary,
@@ -546,6 +725,102 @@ const styles = StyleSheet.create({
     fontSize: typography.md,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+
+  // Filter Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContainer: {
+    backgroundColor: colors.white,
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    maxHeight: '80%',
+  },
+  modalHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 24,
+  },
+  modalTitle: {
+    fontSize: typography.xl,
+    fontFamily: typography.bold,
+    color: colors.textPrimary,
+  },
+  filterSectionTitle: {
+    fontSize: typography.md,
+    fontFamily: typography.bold,
+    color: colors.textPrimary,
+    marginBottom: 12,
+    marginTop: 8,
+  },
+  filterChipsRow: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 8,
+    marginBottom: 16,
+  },
+  filterChip: {
+    paddingHorizontal: 16,
+    paddingVertical: 8,
+    borderRadius: 20,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    backgroundColor: colors.white,
+  },
+  filterChipActive: {
+    borderColor: colors.primary,
+    backgroundColor: colors.primaryLight,
+  },
+  filterChipText: {
+    fontSize: typography.sm,
+    color: colors.textSecondary,
+    fontFamily: typography.medium,
+  },
+  filterChipTextActive: {
+    color: colors.primary,
+    fontFamily: typography.bold,
+  },
+  modalButtons: {
+    flexDirection: 'row',
+    gap: 12,
+    marginTop: 16,
+  },
+  clearButton: {
+    flex: 1,
+    height: 50,
+    borderRadius: 12,
+    borderWidth: 1.5,
+    borderColor: colors.border,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  clearButtonText: {
+    fontSize: typography.md,
+    color: colors.textSecondary,
+    fontFamily: typography.medium,
+  },
+  applyFilterButton: {
+    flex: 2,
+    height: 50,
+    borderRadius: 12,
+    backgroundColor: colors.primary,
+    justifyContent: 'center',
+    alignItems: 'center',
+    shadowColor: colors.primary,
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 4,
+  },
+  applyFilterButtonText: {
+    fontSize: typography.md,
+    fontFamily: typography.bold,
+    color: colors.white,
   },
 });
 
