@@ -17,6 +17,7 @@ import { ProfileStackParamList } from '../../navigation/ProfileStack';
 import { workerService } from '../../services/workerService';
 import { useFocusEffect } from '@react-navigation/native';
 import { useCallback } from 'react';
+import { navigateToNotifications } from '../../utils/navigation';
 
 type NavigationProp = NativeStackNavigationProp<ProfileStackParamList, 'ProfileHome'>;
 
@@ -24,19 +25,34 @@ const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const { user, logout, updateUser } = useAuth();
 
-  useFocusEffect(
-  useCallback(() => {
-    const refreshProfile = async () => {
-      try {
-        const updatedProfile = await workerService.getProfile();
-        updateUser({ ...updatedProfile });
-      } catch (error) {
-        console.log('Error refreshing profile:', error);
-      }
-    };
-    refreshProfile();
-  }, [])
-);
+//  useFocusEffect(
+//   useCallback(() => {
+//     const refreshProfile = async () => {
+//       try {
+//         const response = await workerService.getProfile();
+//         updateUser({
+//           _id: response._id,
+//           firstName: response.firstName,
+//           lastName: response.lastName,
+//           email: response.user?.email,
+//           role: response.user?.role,
+//           specialty: response.specialty,
+//           phoneNumber: response.phoneNumber,
+//           bio: response.bio,
+//           address: response.address,
+//           experienceYears: response.experienceYears,
+//           verificationStatus: response.verificationStatus,
+//           certifications: response.certifications,
+//           availability: response.availability,
+//           verified: response.verificationStatus === 'Approved',
+//         });
+//       } catch (error) {
+//         console.log('Error refreshing profile:', error);
+//       }
+//     };
+//     refreshProfile();
+//   }, [])
+// );
 
   const handleLogout = () => {
     Alert.alert(
@@ -131,7 +147,10 @@ const ProfileScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Profile</Text>
-        <TouchableOpacity style={styles.bellButton}>
+        <TouchableOpacity 
+        style={styles.bellButton}
+          onPress={navigateToNotifications}
+          >
           <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
           <View style={styles.notificationDot} />
         </TouchableOpacity>
@@ -144,14 +163,20 @@ const ProfileScreen = () => {
         {/* Profile Card */}
         <View style={styles.profileCard}>
           {/* Avatar */}
-          <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>
-  {user?.firstName?.charAt(0).toUpperCase() || 'U'}
-              </Text>
-            <TouchableOpacity style={styles.avatarEditButton}>
-              <Ionicons name="camera" size={14} color={colors.white} />
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity
+  style={styles.avatarContainer}
+  onPress={() =>
+    Alert.alert('Coming Soon', 'Profile photo upload coming soon!')
+  }
+>
+  <Text style={styles.avatarText}>
+    {user?.firstName?.charAt(0).toUpperCase() || 'U'}
+  </Text>
+
+  <View style={styles.avatarEditButton}>
+    <Ionicons name="camera" size={14} color={colors.white} />
+  </View>
+</TouchableOpacity>
 
           <Text style={styles.profileName}>{user?.firstName} {user?.lastName}</Text>
           <Text style={styles.profileSpecialty}>{user?.specialty}</Text>

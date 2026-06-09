@@ -17,6 +17,8 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { earningsService } from '../../services/earnings';
 import { EarningsStackParamList } from '../../navigation/EarningsStack';
+import { navigateToNotifications } from '../../utils/navigation';
+
 
 type NavigationProp = NativeStackNavigationProp<EarningsStackParamList, 'EarningsDashboard'>;
 
@@ -75,7 +77,9 @@ const EarningsScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Earnings</Text>
-        <TouchableOpacity style={styles.bellButton}>
+        <TouchableOpacity style={styles.bellButton}
+        onPress={navigateToNotifications}
+        >
           <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
           <View style={styles.notificationDot} />
         </TouchableOpacity>

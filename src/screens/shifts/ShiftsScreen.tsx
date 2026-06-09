@@ -224,10 +224,13 @@ const loadShifts = async () => {
                     <Text style={styles.locationText}>Nigeria</Text>
                   </View>
                 </View>
-                <TouchableOpacity style={styles.notificationButton}>
-                  <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
-                  <View style={styles.notificationDot} />
-                </TouchableOpacity>
+                <TouchableOpacity
+  style={styles.notificationButton}
+  onPress={() => navigation.navigate('Notifications')}
+>
+  <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
+  <View style={styles.notificationDot} />
+</TouchableOpacity>
               </View>
 
               {/* Tabs + Filter */}
@@ -505,8 +508,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   verifiedIcon: {
-    width: 20,
-    height: 20,
+    width: 45,
+    height: 45,
   },
   applyButton: {
     backgroundColor: colors.primary,

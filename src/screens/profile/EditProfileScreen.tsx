@@ -73,7 +73,9 @@ const EditProfileScreen = ({ navigation }: Props) => {
         lastName,
         specialty,
         phoneNumber: phone,
-        ...updatedProfile,
+        bio,
+        address: preferredLocation,
+        exprienceYears: yearsOfExperience,
       });
 
       Alert.alert('Success', 'Profile updated successfully!', [
@@ -312,7 +314,7 @@ const EditProfileScreen = ({ navigation }: Props) => {
           )}
         </TouchableOpacity>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 80 }} />
       </ScrollView>
     </View>
   );

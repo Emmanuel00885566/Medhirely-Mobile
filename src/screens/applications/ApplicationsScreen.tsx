@@ -18,6 +18,7 @@ import { typography } from '../../theme/typography';
 import { applicationsService } from '../../services/applications';
 import { useAuth } from '../../context/AuthContext';
 import { ApplicationsStackParamList } from '../../navigation/ApplicationsStack';
+import { navigateToNotifications } from '../../utils/navigation';
 
 type NavigationProp = NativeStackNavigationProp<ApplicationsStackParamList, 'ApplicationsList'>;
 
@@ -206,7 +207,9 @@ const ApplicationsScreen = () => {
       {/* Header */}
       <View style={styles.header}>
         <Text style={styles.headerTitle}>Applications</Text>
-        <TouchableOpacity style={styles.bellButton}>
+        <TouchableOpacity style={styles.bellButton}
+        onPress={navigateToNotifications}
+        >
           <Ionicons name="notifications-outline" size={24} color={colors.textPrimary} />
           <View style={styles.notificationDot} />
         </TouchableOpacity>

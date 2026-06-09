@@ -7,6 +7,7 @@ import ShiftsStack from './ShiftsStack';
 import ApplicationsStack from './ApplicationsStack';
 import EarningsStack from './EarningsStack';
 import ProfileStack from './ProfileStack';
+import { typography } from '../theme/typography';
 
 export type MainTabParamList = {
   Shifts: undefined;
@@ -32,19 +33,21 @@ const MainTabs = () => {
             right: 24,
             backgroundColor: colors.white,
             borderRadius: 40,
-            height: 65,
+            height: 60,
             borderTopWidth: 0,
             shadowColor: colors.black,
             shadowOffset: { width: 0, height: 4 },
             shadowOpacity: 0.12,
             shadowRadius: 16,
             elevation: 8,
-            paddingBottom: 0,
+            paddingBottom: 8,
             paddingHorizontal: 8,
             overflow: 'hidden',
           },
           tabBarLabelStyle: {
-            display: 'none',
+            fontSize: 10,
+            fontFamily: typography.medium,
+            marginBottom: 8,
           },
           tabBarIcon: ({ focused }) => {
             const icons: Record<string, keyof typeof Ionicons.glyphMap> = {
@@ -75,10 +78,26 @@ const MainTabs = () => {
           },
         })}
       >
-        <Tab.Screen name="Shifts" component={ShiftsStack} />
-        <Tab.Screen name="Applications" component={ApplicationsStack} />
-        <Tab.Screen name="Earnings" component={EarningsStack} />
-        <Tab.Screen name="Profile" component={ProfileStack} />
+        <Tab.Screen 
+  name="Shifts" 
+  component={ShiftsStack}
+  options={{ tabBarLabel: 'Shifts' }}
+/>
+<Tab.Screen 
+  name="Applications" 
+  component={ApplicationsStack}
+  options={{ tabBarLabel: 'Applications' }}
+/>
+<Tab.Screen 
+  name="Earnings" 
+  component={EarningsStack}
+  options={{ tabBarLabel: 'Earnings' }}
+/>
+<Tab.Screen 
+  name="Profile" 
+  component={ProfileStack}
+  options={{ tabBarLabel: 'Profile' }}
+/>
       </Tab.Navigator>
     </View>
   );

@@ -53,6 +53,30 @@ const UpcomingShiftDetailScreen = ({ navigation, route }: Props) => {
       ]
     );
   };
+const handleCompleteShift = () => {
+  Alert.alert(
+    'Complete Shift',
+    'Are you sure you want to mark this shift as completed?',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Yes, Complete',
+        onPress: async () => {
+          try {
+            await applicationsService.withdrawApplication(applicationId);
+            Alert.alert(
+              'Shift Completed! 🎉',
+              'Your shift has been marked as completed. Payment will be processed by the facility.',
+              [{ text: 'OK', onPress: () => navigation.goBack() }]
+            );
+          } catch (error) {
+            Alert.alert('Error', 'Failed to complete shift. Please try again.');
+          }
+        },
+      },
+    ]
+  );
+};
 
   const handleGetDirections = () => {
     const address = encodeURIComponent(application?.shift?.address || '');
@@ -196,32 +220,40 @@ const UpcomingShiftDetailScreen = ({ navigation, route }: Props) => {
           </View>
         </View>
 
-        <View style={{ height: 120 }} />
+        <View style={{ height: 145 }} />
       </ScrollView>
 
       {/* Bottom Buttons */}
-      <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          style={styles.directionsButton}
-          onPress={handleGetDirections}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.directionsButtonText}>Get Directions</Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[
-            styles.checkInButton,
-            checkedIn && styles.checkedInButton,
-          ]}
-          onPress={handleCheckIn}
-          disabled={checkedIn}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.checkInButtonText}>
-            {checkedIn ? 'Checked In ✅' : 'Shift Check-in'}
-          </Text>
-        </TouchableOpacity>
-      </View>
+      {/* Bottom Buttons */}
+<View style={styles.bottomContainer}>
+  {!checkedIn ? (
+    <>
+      <TouchableOpacity
+        style={styles.directionsButton}
+        onPress={handleGetDirections}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.directionsButtonText}>Get Directions</Text>
+      </TouchableOpacity>
+      <TouchableOpacity
+        style={styles.checkInButton}
+        onPress={handleCheckIn}
+        activeOpacity={0.85}
+      >
+        <Text style={styles.checkInButtonText}>Shift Check-in</Text>
+      </TouchableOpacity>
+    </>
+  ) : (
+    <TouchableOpacity
+      style={styles.completeButton}
+      onPress={handleCompleteShift}
+      activeOpacity={0.85}
+    >
+      <Ionicons name="checkmark-circle-outline" size={20} color={colors.white} />
+      <Text style={styles.completeButtonText}>Mark Shift as Completed</Text>
+    </TouchableOpacity>
+  )}
+</View>
     </View>
   );
 };
@@ -422,7 +454,7 @@ const styles = StyleSheet.create({
   },
   bottomContainer: {
     position: 'absolute',
-    bottom: 0,
+    bottom: 60,
     left: 0,
     right: 0,
     flexDirection: 'row',
@@ -462,6 +494,26 @@ const styles = StyleSheet.create({
     fontFamily: typography.bold,
     color: colors.white,
   },
+  completeButton: {
+  flex: 1,
+  height: 52,
+  borderRadius: 12,
+  backgroundColor: colors.success,
+  justifyContent: 'center',
+  alignItems: 'center',
+  flexDirection: 'row',
+  gap: 8,
+  shadowColor: colors.success,
+  shadowOffset: { width: 0, height: 4 },
+  shadowOpacity: 0.3,
+  shadowRadius: 8,
+  elevation: 4,
+},
+completeButtonText: {
+  fontSize: typography.md,
+  fontFamily: typography.bold,
+  color: colors.white,
+},
 });
 
 export default UpcomingShiftDetailScreen;

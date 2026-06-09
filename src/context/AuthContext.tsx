@@ -9,18 +9,27 @@ import { authService } from '../services/auth';
 import { workerService } from '../services/workerService';
 
 type User = {
-  id: string;
+  _id?: string;
+  id?: string;
   firstName: string;
   lastName: string;
-  email: string;
-  role: string;
-  specialty: string;
-  phoneNumber: string;
-  verified: boolean;
+  email?: string;
+  user?: { email: string; 
+          role: string; 
+          _id: string; 
+          isEmailVerified: boolean 
+        };
+  role?: string;
+  specialty?: string;
+  phoneNumber?: string;
+  verified?: boolean;
   bio?: string;
   address?: string;
   exprienceYears?: string;
+  experienceYears?: number;
   verificationStatus?: string;
+  certifications?: any[];
+  availability?: any[];
 };
 
 type AuthContextType = {
@@ -62,26 +71,40 @@ export const AuthProvider = ({
     useState(false);
 
   useEffect(() => {
-    const loadUser = async () => {
-      try {
-        const storedUser =
-          await authService.getStoredUser();
-
-        if (storedUser) {
-          setUser(storedUser);
+  const loadUser = async () => {
+    try {
+      const storedUser = await authService.getStoredUser();
+      if (storedUser) {
+        setUser(storedUser);
+        // ✅ Fetch fresh profile from server in background
+        try {
+          const { workerService } = require('../services/workerService');
+          const freshProfile = await workerService.getProfile();
+          setUser((prev: any) => ({
+            ...prev,
+            firstName: freshProfile.firstName,
+            lastName: freshProfile.lastName,
+            specialty: freshProfile.specialty,
+            phoneNumber: freshProfile.phoneNumber,
+            bio: freshProfile.bio,
+            address: freshProfile.address,
+            experienceYears: freshProfile.experienceYears,
+            verificationStatus: freshProfile.verificationStatus,
+            email: freshProfile.user?.email || prev?.email,
+            verified: freshProfile.verificationStatus === 'Approved',
+          }));
+        } catch (e) {
+          console.log('Background profile fetch failed:', e);
         }
-      } catch (error) {
-        console.log(
-          'Error loading user:',
-          error
-        );
-      } finally {
-        setIsLoading(false);
       }
-    };
-
-    loadUser();
-  }, []);
+    } catch (error) {
+      console.log('Error loading user:', error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  loadUser();
+}, []);
 
   const login = async (
     email: string,
@@ -166,16 +189,12 @@ export const AuthProvider = ({
     }
   };
 
-  const updateUser = (
-    updates: Partial<User>
-  ) => {
-    if (user) {
-      setUser({
-        ...user,
-        ...updates,
-      });
-    }
-  };
+  const updateUser = (updates: Partial<User>) => {
+  setUser((prevUser) => {
+    if (!prevUser) return updates as User;
+    return { ...prevUser, ...updates };
+  });
+};
 
   return (
     <AuthContext.Provider

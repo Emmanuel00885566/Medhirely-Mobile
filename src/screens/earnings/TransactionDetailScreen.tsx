@@ -17,6 +17,7 @@ import { typography } from '../../theme/typography';
 import { earningsService } from '../../services/earnings';
 import { EarningsStackParamList } from '../../navigation/EarningsStack';
 
+
 type Props = {
   navigation: NativeStackNavigationProp<EarningsStackParamList, 'TransactionDetail'>;
   route: RouteProp<EarningsStackParamList, 'TransactionDetail'>;
@@ -69,9 +70,12 @@ const TransactionDetailScreen = ({ navigation, route }: Props) => {
       </View>
 
       <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.content}
-      >
+  showsVerticalScrollIndicator={false}
+  contentContainerStyle={{
+    paddingHorizontal: 16,
+    paddingBottom: 40,
+  }}
+>
         {/* Status + Facility */}
         <View style={styles.facilityCard}>
           <View style={styles.facilityTop}>
@@ -264,6 +268,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
+    paddingBottom: 40,
   },
   facilityCard: {
     backgroundColor: colors.white,

@@ -5,6 +5,7 @@ import { useAuth } from '../context/AuthContext';
 import AuthStack from './AuthStack';
 import MainTabs from './MainTabs';
 import { colors } from '../theme/colors';
+import { navigationRef } from '../utils/navigation';
 
 const AppNavigator = () => {
   const { isAuthenticated, isLoading, isVerified, hasSeenOnboarding } = useAuth();
@@ -18,7 +19,7 @@ const AppNavigator = () => {
   }
 
   return (
-  <NavigationContainer>
+  <NavigationContainer ref={navigationRef}>
     {!isAuthenticated ? (
       <AuthStack />
     ) : (
