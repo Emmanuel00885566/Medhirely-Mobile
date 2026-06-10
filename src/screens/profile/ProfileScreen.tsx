@@ -6,6 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
   Alert,
+  Image
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -162,21 +163,20 @@ const ProfileScreen = () => {
       >
         {/* Profile Card */}
         <View style={styles.profileCard}>
+          
           {/* Avatar */}
-          <TouchableOpacity
-  style={styles.avatarContainer}
-  onPress={() =>
-    Alert.alert('Coming Soon', 'Profile photo upload coming soon!')
-  }
->
-  <Text style={styles.avatarText}>
-    {user?.firstName?.charAt(0).toUpperCase() || 'U'}
-  </Text>
-
-  <View style={styles.avatarEditButton}>
-    <Ionicons name="camera" size={14} color={colors.white} />
-  </View>
-</TouchableOpacity>
+<View style={styles.avatarContainer}>
+  {user?.profilePicture ? (
+    <Image
+      source={{ uri: user.profilePicture }}
+      style={styles.avatarImage}
+    />
+  ) : (
+    <Text style={styles.avatarText}>
+      {user?.firstName?.charAt(0).toUpperCase() || 'U'}
+    </Text>
+  )}
+</View>
 
           <Text style={styles.profileName}>{user?.firstName} {user?.lastName}</Text>
           <Text style={styles.profileSpecialty}>{user?.specialty}</Text>
@@ -451,6 +451,11 @@ const styles = StyleSheet.create({
     fontFamily: typography.bold,
     color: colors.error,
   },
+  avatarImage: {
+  width: '100%',
+  height: '100%',
+  borderRadius: 45,
+},
 });
 
 export default ProfileScreen;

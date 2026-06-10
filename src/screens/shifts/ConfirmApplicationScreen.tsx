@@ -62,8 +62,8 @@ const ConfirmApplicationScreen = ({ navigation, route }: Props) => {
       await applicationsService.applyForShift(
         shiftId,
         user?.id || '',
-        shift?.facilityId || '',
-        'I am interested in this shift and available to deliver.'
+        shift?.facilityId
+        // 'I am interested in this shift and available to deliver.'
       );
       setIsSuccess(true);
       Animated.spring(scaleAnim, {

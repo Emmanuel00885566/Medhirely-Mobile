@@ -687,8 +687,8 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   verifiedIcon: {
-    width: 20,
-    height: 20,
+    width: 40,
+    height: 40,
   },
   applyButton: {
     backgroundColor: colors.primary,

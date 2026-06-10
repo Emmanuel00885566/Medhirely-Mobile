@@ -64,19 +64,22 @@ const ApplicationsScreen = () => {
   };
 
   const handleWithdraw = async () => {
-    if (!selectedApp) return;
-    setIsWithdrawing(true);
-    try {
-      await applicationsService.withdrawApplication(selectedApp.id);
-      setWithdrawModal(false);
-      Alert.alert('Success', 'Application withdrawn successfully');
-      loadApplications();
-    } catch (error) {
-      Alert.alert('Error', 'Failed to withdraw application');
-    } finally {
-      setIsWithdrawing(false);
-    }
-  };
+  if (!selectedApp) return;
+  setIsWithdrawing(true);
+  try {
+    await applicationsService.withdrawApplication(selectedApp.id);
+    // ✅ Remove from list immediately without refetching
+    setApplications((prev) =>
+      prev.filter((app) => app.id !== selectedApp.id)
+    );
+    setWithdrawModal(false);
+    Alert.alert('Success', 'Application withdrawn successfully');
+  } catch (error) {
+    Alert.alert('Error', 'Failed to withdraw application');
+  } finally {
+    setIsWithdrawing(false);
+  }
+};
 
   const getStatusConfig = (status: string) => {
     switch (status) {

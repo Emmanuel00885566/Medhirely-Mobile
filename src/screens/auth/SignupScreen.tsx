@@ -38,53 +38,61 @@ const SignupScreen = ({ navigation }: Props) => {
   const [phoneNumber, setPhoneNumber] = useState('');
   const [specialty, setSpecialty] = useState('');
   const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
+  const [customSpecialty, setCustomSpecialty] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
-  const handleSignup = async () => {
-    if (!firstName || !lastName || !email || !phoneNumber || !specialty || !password) {
-      Alert.alert('Error', 'Please fill in all fields');
-      return;
-    }
+ const handleSignup = async () => {
+  const finalSpecialty = specialty === 'other' ? customSpecialty.trim() : specialty;
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      Alert.alert('Error', 'Please enter a valid email address');
-      return;
-    }
+  if (!firstName || !lastName || !email || !phoneNumber || !specialty || !password) {
+    Alert.alert('Error', 'Please fill in all fields');
+    return;
+  }
 
-    if (password.length < 8) {
-      Alert.alert('Error', 'Password must be at least 8 characters');
-      return;
-    }
+  if (specialty === 'other' && !customSpecialty.trim()) {
+    Alert.alert('Error', 'Please enter your specialty');
+    return;
+  }
 
-    if (!agreedToTerms) {
-      Alert.alert('Error', 'Please agree to the Terms of Service and Privacy Policy');
-      return;
-    }
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    Alert.alert('Error', 'Please enter a valid email address');
+    return;
+  }
 
-    setIsLoading(true);
-    try {
-      const response = await authService.signup({
-        firstName,
-        lastName,
-        email,
-        phoneNumber,
-        specialty,
-        password,
-      });
-      console.log('Signup success:', response);
-      navigation.navigate('OTPVerification', { email, type: 'signup' });
-    } catch (error: any) {
-      console.log('Signup error:', error?.response?.data);
-      console.log('Signup error status:', error?.response?.status);
-      Alert.alert('Signup Failed', error?.response?.data?.message || 'Something went wrong. Please try again.');
-    } finally {
-      setIsLoading(false);
-    }
-  };
+  if (password.length < 8) {
+    Alert.alert('Error', 'Password must be at least 8 characters');
+    return;
+  }
+
+  if (!agreedToTerms) {
+    Alert.alert('Error', 'Please agree to the Terms of Service and Privacy Policy');
+    return;
+  }
+
+  setIsLoading(true);
+  try {
+    const response = await authService.signup({
+      firstName,
+      lastName,
+      email,
+      phoneNumber,
+      specialty: finalSpecialty,
+      password,
+    });
+    console.log('Signup success:', response);
+    navigation.navigate('OTPVerification', { email, type: 'signup' });
+  } catch (error: any) {
+    console.log('Signup error:', error?.response?.data);
+    console.log('Signup error status:', error?.response?.status);
+    Alert.alert('Signup Failed', error?.response?.data?.message || 'Something went wrong. Please try again.');
+  } finally {
+    setIsLoading(false);
+  }
+};
 
   return (
     <KeyboardAvoidingView
@@ -203,66 +211,80 @@ const SignupScreen = ({ navigation }: Props) => {
         </View>
 
         {/* Specialty */}
-        <View style={styles.inputGroup}>
-          <Text style={styles.label}>Specialty</Text>
-          <TouchableOpacity
-            style={styles.inputWrapper}
-            onPress={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
-          >
-            <Ionicons
-              name="medkit-outline"
-              size={18}
-              color={colors.textMuted}
-              style={styles.inputIcon}
-            />
-            <Text
-              style={[
-                styles.input,
-                {
-                  paddingVertical: 0,
-                  color: specialty ? colors.textPrimary : colors.textMuted,
-                },
-              ]}
-            >
-              {specialty || 'Select your specialty'}
-            </Text>
-            <Ionicons
-              name={showSpecialtyPicker ? 'chevron-up' : 'chevron-down'}
-              size={18}
-              color={colors.textMuted}
-            />
-          </TouchableOpacity>
-
-          {showSpecialtyPicker && (
-            <View style={styles.pickerDropdown}>
-              {SPECIALTIES.map((item) => (
+<View style={styles.inputGroup}>
+  <Text style={styles.label}>Specialty</Text>
   <TouchableOpacity
-    key={item.value}
-    style={[
-      styles.pickerItem,
-      specialty === item.value && styles.pickerItemActive,
-    ]}
-    onPress={() => {
-      setSpecialty(item.value); // sends lowercase to backend
-      setShowSpecialtyPicker(false);
-    }}
+    style={styles.inputWrapper}
+    onPress={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
   >
+    <Ionicons
+      name="medkit-outline"
+      size={18}
+      color={colors.textMuted}
+      style={styles.inputIcon}
+    />
     <Text
       style={[
-        styles.pickerItemText,
-        specialty === item.value && styles.pickerItemTextActive,
+        styles.input,
+        {
+          paddingVertical: 0,
+          color: specialty ? colors.textPrimary : colors.textMuted,
+        },
       ]}
     >
-      {item.label} 
+      {specialty === 'other'
+        ? customSpecialty || 'Type your specialty...'
+        : SPECIALTIES.find((s) => s.value === specialty)?.label || 'Select your specialty'}
     </Text>
-    {specialty === item.value && (
-      <Ionicons name="checkmark" size={16} color={colors.primary} />
-    )}
+    <Ionicons
+      name={showSpecialtyPicker ? 'chevron-up' : 'chevron-down'}
+      size={18}
+      color={colors.textMuted}
+    />
   </TouchableOpacity>
-))}
-            </View>
+
+  {showSpecialtyPicker && (
+    <View style={styles.pickerDropdown}>
+      {SPECIALTIES.map((item) => (
+        <TouchableOpacity
+          key={item.value}
+          style={[
+            styles.pickerItem,
+            specialty === item.value && styles.pickerItemActive,
+          ]}
+          onPress={() => {
+            setSpecialty(item.value);
+            setShowSpecialtyPicker(false);
+          }}
+        >
+          <Text
+            style={[
+              styles.pickerItemText,
+              specialty === item.value && styles.pickerItemTextActive,
+            ]}
+          >
+            {item.label}
+          </Text>
+          {specialty === item.value && (
+            <Ionicons name="checkmark" size={16} color={colors.primary} />
           )}
-        </View>
+        </TouchableOpacity>
+      ))}
+    </View>
+  )}
+
+  {/* Custom specialty input when Other is selected */}
+  {specialty === 'other' && (
+    <TextInput
+      style={[styles.nameInput, { marginTop: 8 }]}
+      placeholder="Type your specialty..."
+      placeholderTextColor={colors.textMuted}
+      value={customSpecialty}
+      onChangeText={setCustomSpecialty}
+      autoCapitalize="words"
+    />
+  )}
+</View>
 
         {/* Password */}
         <View style={styles.inputGroup}>

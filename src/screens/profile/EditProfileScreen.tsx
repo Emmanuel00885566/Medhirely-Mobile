@@ -8,6 +8,7 @@ import {
   TextInput,
   ActivityIndicator,
   Alert,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -16,6 +17,7 @@ import { typography } from '../../theme/typography';
 import { useAuth } from '../../context/AuthContext';
 import { ProfileStackParamList } from '../../navigation/ProfileStack';
 import { workerService } from '../../services/workerService';
+import * as ImagePicker from 'expo-image-picker';
 
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'EditProfile'>;
@@ -30,28 +32,32 @@ const SPECIALTIES = [
   'Surgery',
   'Radiology',
   'Anesthesiology',
+  'Other',
 ];
-
-const AVAILABILITY = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
 const EditProfileScreen = ({ navigation }: Props) => {
   const { user, updateUser } = useAuth();
-  const [firstName, setFirstName] = useState(user?.firstName || '');
-  const [lastName, setLastName] = useState(user?.lastName || '');
-  const [email, setEmail] = useState(user?.email || '');
-  const [phone, setPhone] = useState(user?.phoneNumber || '');
+  const [firstName] = useState(user?.firstName || '');
+  const [lastName] = useState(user?.lastName || '');
+  const [email] = useState(user?.email || '');
+  const [phone] = useState(user?.phoneNumber || '');
   const [bio, setBio] = useState(user?.bio || '');
   const [specialty, setSpecialty] = useState(user?.specialty || '');
-  const [yearsOfExperience, setYearsOfExperience] = useState(user?.exprienceYears || '');
+  const [customSpecialty, setCustomSpecialty] = useState('');
+  const [yearsOfExperience, setYearsOfExperience] = useState(
+    user?.experienceYears?.toString() || ''
+  );
   const [preferredLocation, setPreferredLocation] = useState(user?.address || '');
-  const [selectedAvailability, setSelectedAvailability] = useState<string[]>(['Mon', 'Wed', 'Fri']);
   const [showSpecialtyPicker, setShowSpecialtyPicker] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const [uploadingAvatar, setUploadingAvatar] = useState(false);
 
-  const toggleAvailability = (day: string) => {
-    setSelectedAvailability((prev) =>
-      prev.includes(day) ? prev.filter((d) => d !== day) : [...prev, day]
-    );
+  const isOtherSpecialty = specialty === 'Other';
+
+  const handleSelectSpecialty = (item: string) => {
+    setSpecialty(item);
+    if (item !== 'Other') setCustomSpecialty('');
+    setShowSpecialtyPicker(false);
   };
 
   const handleSave = async () => {
@@ -59,24 +65,23 @@ const EditProfileScreen = ({ navigation }: Props) => {
       Alert.alert('Error', 'Please fill in all required fields');
       return;
     }
+
+    const finalSpecialty = isOtherSpecialty ? customSpecialty.trim() : specialty;
+    if (!finalSpecialty) {
+      Alert.alert('Error', 'Please enter your specialty');
+      return;
+    }
+
     setIsLoading(true);
     try {
       await workerService.updateProfile({
         bio,
         address: preferredLocation,
-        exprienceYears: yearsOfExperience,
+        experienceYears: yearsOfExperience,
       });
 
       const updatedProfile = await workerService.getProfile();
-      updateUser({
-        firstName,
-        lastName,
-        specialty,
-        phoneNumber: phone,
-        bio,
-        address: preferredLocation,
-        exprienceYears: yearsOfExperience,
-      });
+      updateUser(updatedProfile);
 
       Alert.alert('Success', 'Profile updated successfully!', [
         { text: 'OK', onPress: () => navigation.goBack() },
@@ -91,14 +96,52 @@ const EditProfileScreen = ({ navigation }: Props) => {
     }
   };
 
+  const handleAvatarUpload = async () => {
+    try {
+      const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+      if (!permission.granted) {
+        Alert.alert('Permission Required', 'Please allow access to your photos');
+        return;
+      }
+
+      const result = await ImagePicker.launchImageLibraryAsync({
+        mediaTypes: ['images'],
+        quality: 0.8,
+        allowsEditing: true,
+        aspect: [1, 1],
+      });
+
+      if (result.canceled) return;
+
+      setUploadingAvatar(true);
+      const image = result.assets[0];
+
+      await workerService.uploadAvatar({
+        uri: image.uri,
+        fileName: 'profile.jpg',
+        mimeType: image.mimeType || 'image/jpeg',
+      });
+
+      const updatedProfile = await workerService.getProfile();
+console.log('Profile after upload:', JSON.stringify(updatedProfile, null, 2));
+updateUser(updatedProfile);
+
+      Alert.alert('Success', 'Profile photo updated successfully');
+    } catch (error: any) {
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Failed to upload photo'
+      );
+    } finally {
+      setUploadingAvatar(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Edit Profile</Text>
@@ -113,74 +156,71 @@ const EditProfileScreen = ({ navigation }: Props) => {
         {/* Avatar */}
         <View style={styles.avatarSection}>
           <View style={styles.avatarContainer}>
-            <Text style={styles.avatarText}>
-              {firstName?.charAt(0).toUpperCase()}
-            </Text>
-            <TouchableOpacity style={styles.avatarEditButton}>
-              <Ionicons name="camera" size={14} color={colors.white} />
+            {user?.profilePicture ? (
+              <Image source={{ uri: user.profilePicture }} style={styles.avatarImage} />
+            ) : (
+              <Text style={styles.avatarText}>
+                {firstName?.charAt(0).toUpperCase()}
+              </Text>
+            )}
+            <TouchableOpacity
+              style={styles.avatarEditButton}
+              onPress={handleAvatarUpload}
+              disabled={uploadingAvatar}
+            >
+              {uploadingAvatar ? (
+                <ActivityIndicator size="small" color={colors.white} />
+              ) : (
+                <Ionicons name="camera" size={14} color={colors.white} />
+              )}
             </TouchableOpacity>
           </View>
-          <TouchableOpacity>
-            <Text style={styles.changePhotoText}>Change Profile Photo</Text>
-          </TouchableOpacity>
         </View>
 
         {/* Personal Info */}
         <Text style={styles.sectionTitle}>Personal Information</Text>
         <View style={styles.formCard}>
-
-          {/* First Name */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>First Name</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, styles.disabledInput]}
               value={firstName}
-              onChangeText={setFirstName}
-              placeholder="Enter your first name"
+              editable={false}
               placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
             />
           </View>
 
-          {/* Last Name */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Last Name</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, styles.disabledInput]}
               value={lastName}
-              onChangeText={setLastName}
-              placeholder="Enter your last name"
+              editable={false}
               placeholderTextColor={colors.textMuted}
-              autoCapitalize="words"
             />
           </View>
 
-          {/* Email */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Email Address</Text>
             <TextInput
               style={[styles.input, styles.disabledInput]}
               value={email}
               editable={false}
-              placeholder="Email"
               placeholderTextColor={colors.textMuted}
             />
           </View>
 
-          {/* Phone */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Phone Number</Text>
             <TextInput
-              style={styles.input}
+              style={[styles.input, styles.disabledInput]}
               value={phone}
-              onChangeText={setPhone}
-              placeholder="+234 000 000 0000"
+              editable={false}
               placeholderTextColor={colors.textMuted}
               keyboardType="phone-pad"
             />
           </View>
 
-          {/* Bio */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Bio</Text>
             <TextInput
@@ -199,25 +239,24 @@ const EditProfileScreen = ({ navigation }: Props) => {
         {/* Professional Info */}
         <Text style={styles.sectionTitle}>Professional Information</Text>
         <View style={styles.formCard}>
-          {/* Specialty */}
+
+          {/* Specialty Picker */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Specialty</Text>
             <TouchableOpacity
               style={styles.pickerButton}
-              onPress={() => setShowSpecialtyPicker(!showSpecialtyPicker)}
+              onPress={() => setShowSpecialtyPicker((prev) => !prev)}
             >
-              <Text style={[
-                styles.pickerButtonText,
-                !specialty && { color: colors.textMuted }
-              ]}>
-                {specialty || 'Select your specialty'}
+              <Text style={styles.pickerButtonText}>
+                {isOtherSpecialty ? 'Other' : specialty || 'Select specialty'}
               </Text>
               <Ionicons
                 name={showSpecialtyPicker ? 'chevron-up' : 'chevron-down'}
                 size={18}
-                color={colors.textMuted}
+                color={colors.textSecondary}
               />
             </TouchableOpacity>
+
             {showSpecialtyPicker && (
               <View style={styles.pickerDropdown}>
                 {SPECIALTIES.map((item) => (
@@ -227,15 +266,14 @@ const EditProfileScreen = ({ navigation }: Props) => {
                       styles.pickerItem,
                       specialty === item && styles.pickerItemActive,
                     ]}
-                    onPress={() => {
-                      setSpecialty(item);
-                      setShowSpecialtyPicker(false);
-                    }}
+                    onPress={() => handleSelectSpecialty(item)}
                   >
-                    <Text style={[
-                      styles.pickerItemText,
-                      specialty === item && styles.pickerItemTextActive,
-                    ]}>
+                    <Text
+                      style={[
+                        styles.pickerItemText,
+                        specialty === item && styles.pickerItemTextActive,
+                      ]}
+                    >
                       {item}
                     </Text>
                     {specialty === item && (
@@ -245,9 +283,20 @@ const EditProfileScreen = ({ navigation }: Props) => {
                 ))}
               </View>
             )}
+
+            {/* Custom specialty input when Other is selected */}
+            {isOtherSpecialty && (
+              <TextInput
+                style={[styles.input, { marginTop: 10 }]}
+                value={customSpecialty}
+                onChangeText={setCustomSpecialty}
+                placeholder="Type your specialty..."
+                placeholderTextColor={colors.textMuted}
+                autoCapitalize="words"
+              />
+            )}
           </View>
 
-          {/* Years of Experience */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Years of Experience</Text>
             <TextInput
@@ -260,7 +309,6 @@ const EditProfileScreen = ({ navigation }: Props) => {
             />
           </View>
 
-          {/* Preferred Location */}
           <View style={styles.inputGroup}>
             <Text style={styles.label}>Preferred Location</Text>
             <TextInput
@@ -270,33 +318,6 @@ const EditProfileScreen = ({ navigation }: Props) => {
               placeholder="e.g. Lagos, Nigeria"
               placeholderTextColor={colors.textMuted}
             />
-          </View>
-        </View>
-
-        {/* Availability */}
-        <Text style={styles.sectionTitle}>Availability</Text>
-        <View style={styles.formCard}>
-          <Text style={styles.availabilityHint}>
-            Select the days you are available to work
-          </Text>
-          <View style={styles.availabilityGrid}>
-            {AVAILABILITY.map((day) => (
-              <TouchableOpacity
-                key={day}
-                style={[
-                  styles.availabilityChip,
-                  selectedAvailability.includes(day) && styles.availabilityChipActive,
-                ]}
-                onPress={() => toggleAvailability(day)}
-              >
-                <Text style={[
-                  styles.availabilityChipText,
-                  selectedAvailability.includes(day) && styles.availabilityChipTextActive,
-                ]}>
-                  {day}
-                </Text>
-              </TouchableOpacity>
-            ))}
           </View>
         </View>
 
@@ -362,6 +383,11 @@ const styles = StyleSheet.create({
     marginBottom: 12,
     position: 'relative',
   },
+  avatarImage: {
+    width: '100%',
+    height: '100%',
+    borderRadius: 45,
+  },
   avatarText: {
     fontSize: 36,
     fontFamily: typography.bold,
@@ -379,11 +405,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderWidth: 2,
     borderColor: colors.white,
-  },
-  changePhotoText: {
-    fontSize: typography.sm,
-    color: colors.primary,
-    fontFamily: typography.medium,
   },
   sectionTitle: {
     fontSize: typography.md,
@@ -468,37 +489,6 @@ const styles = StyleSheet.create({
   pickerItemTextActive: {
     color: colors.primary,
     fontFamily: typography.semiBold,
-  },
-  availabilityHint: {
-    fontSize: typography.sm,
-    color: colors.textSecondary,
-    marginBottom: 16,
-  },
-  availabilityGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 10,
-  },
-  availabilityChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderRadius: 20,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-  },
-  availabilityChipActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-  },
-  availabilityChipText: {
-    fontSize: typography.sm,
-    color: colors.textSecondary,
-    fontFamily: typography.medium,
-  },
-  availabilityChipTextActive: {
-    color: colors.white,
-    fontFamily: typography.bold,
   },
   saveButton: {
     backgroundColor: colors.primary,

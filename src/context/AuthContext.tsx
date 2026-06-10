@@ -13,20 +13,15 @@ type User = {
   id?: string;
   firstName: string;
   lastName: string;
-  email?: string;
-  user?: { email: string; 
-          role: string; 
-          _id: string; 
-          isEmailVerified: boolean 
-        };
-  role?: string;
-  specialty?: string;
-  phoneNumber?: string;
-  verified?: boolean;
+  email: string;
+  role: string;
+  specialty: string;
+  phoneNumber: string;
+  verified: boolean;
   bio?: string;
   address?: string;
-  exprienceYears?: string;
   experienceYears?: number;
+  profilePicture?: string;
   verificationStatus?: string;
   certifications?: any[];
   availability?: any[];
@@ -38,132 +33,91 @@ type AuthContextType = {
   isAuthenticated: boolean;
   isVerified: boolean;
   hasSeenOnboarding: boolean;
-  login: (
-    email: string,
-    password: string
-  ) => Promise<void>;
+  login: (email: string, password: string) => Promise<void>;
   logout: () => Promise<void>;
   completeOnboarding: () => void;
   setUserVerified: () => void;
-  updateUser: (
-    updates: Partial<User>
-  ) => void;
+  updateUser: (updates: Partial<User>) => void;
 };
 
-const AuthContext =
-  createContext<AuthContextType | undefined>(
-    undefined
-  );
+const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export const AuthProvider = ({
-  children,
-}: {
-  children: React.ReactNode;
-}) => {
-  const [user, setUser] =
-    useState<User | null>(null);
-
-  const [isLoading, setIsLoading] =
-    useState(true);
-
-  const [hasSeenOnboarding,
-    setHasSeenOnboarding] =
-    useState(false);
+export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
+  const [user, setUser] = useState<User | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [hasSeenOnboarding, setHasSeenOnboarding] = useState(false);
 
   useEffect(() => {
-  const loadUser = async () => {
-    try {
-      const storedUser = await authService.getStoredUser();
-      if (storedUser) {
-        setUser(storedUser);
-        // ✅ Fetch fresh profile from server in background
-        try {
-          const { workerService } = require('../services/workerService');
-          const freshProfile = await workerService.getProfile();
-          setUser((prev: any) => ({
-            ...prev,
-            firstName: freshProfile.firstName,
-            lastName: freshProfile.lastName,
-            specialty: freshProfile.specialty,
-            phoneNumber: freshProfile.phoneNumber,
-            bio: freshProfile.bio,
-            address: freshProfile.address,
-            experienceYears: freshProfile.experienceYears,
-            verificationStatus: freshProfile.verificationStatus,
-            email: freshProfile.user?.email || prev?.email,
-            verified: freshProfile.verificationStatus === 'Approved',
-          }));
-        } catch (e) {
-          console.log('Background profile fetch failed:', e);
+    const loadUser = async () => {
+      try {
+        const storedUser = await authService.getStoredUser();
+        if (storedUser) {
+          setUser(storedUser);
+          // Fetch fresh profile in background
+          try {
+            const freshProfile = await workerService.getProfile();
+            setUser((prev: any) => ({
+              ...prev,
+              _id: freshProfile._id,
+              id: freshProfile._id,
+              firstName: freshProfile.firstName,
+              lastName: freshProfile.lastName,
+              specialty: freshProfile.specialty,
+              phoneNumber: freshProfile.phoneNumber,
+              bio: freshProfile.bio,
+              address: freshProfile.address,
+              experienceYears: freshProfile.experienceYears,
+              verificationStatus: freshProfile.verificationStatus,
+              profilePicture: freshProfile.profilePicture,
+              email: freshProfile.user?.email || prev?.email,
+              role: freshProfile.user?.role || prev?.role,
+              verified: freshProfile.verificationStatus === 'Approved',
+              certifications: freshProfile.certifications,
+              availability: freshProfile.availability,
+            }));
+          } catch (e) {
+            console.log('Background profile fetch failed:', e);
+          }
         }
+      } catch (error) {
+        console.log('Error loading user:', error);
+      } finally {
+        setIsLoading(false);
       }
-    } catch (error) {
-      console.log('Error loading user:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-  loadUser();
-}, []);
+    };
+    loadUser();
+  }, []);
 
-  const login = async (
-    email: string,
-    password: string
-  ) => {
+  const login = async (email: string, password: string) => {
     setIsLoading(true);
-
     try {
-      // Login first
-      await authService.login(
-        email,
-        password
-      );
-
-      // Get profile
-      const profile =
-        await workerService.getProfile();
-
-      console.log(
-        'PROFILE DATA:',
-        profile
-      );
+      await authService.login(email, password);
+      const profile = await workerService.getProfile();
+      console.log('PROFILE DATA:', JSON.stringify(profile, null, 2));
 
       const userData: User = {
+        _id: profile._id,
         id: profile._id,
-        firstName:
-          profile.firstName || '',
-        lastName:
-          profile.lastName || '',
-        email:
-          profile.user?.email || '',
-        role:
-          profile.user?.role || '',
-        specialty:
-          profile.specialty || '',
-        phoneNumber:
-          profile.phoneNumber || '',
-        verified:
-          profile.verificationStatus ===
-          'Approved',
-        exprienceYears: String(
-          profile.experienceYears ?? ''
-        ),
+        firstName: profile.firstName || '',
+        lastName: profile.lastName || '',
+        email: profile.user?.email || '',
+        role: profile.user?.role || '',
+        specialty: profile.specialty || '',
+        phoneNumber: profile.phoneNumber || '',
+        verified: profile.verificationStatus === 'Approved',
+        bio: profile.bio || '',
+        address: profile.address || '',
+        experienceYears: profile.experienceYears,
+        profilePicture: profile.profilePicture || '',
         verificationStatus: profile.verificationStatus,
+        certifications: profile.certifications || [],
+        availability: profile.availability || [],
       };
 
-      // Save to context
       setUser(userData);
-
-      // Save locally
-      await AsyncStorage.setItem(
-        'user',
-        JSON.stringify(userData)
-      );
+      await AsyncStorage.setItem('user', JSON.stringify(userData));
     } catch (error) {
-      console.log(
-        'Login error:',
-        error
-      );
+      console.log('Login error:', error);
       throw error;
     } finally {
       setIsLoading(false);
@@ -182,19 +136,16 @@ export const AuthProvider = ({
 
   const setUserVerified = () => {
     if (user) {
-      setUser({
-        ...user,
-        verified: true,
-      });
+      setUser({ ...user, verified: true });
     }
   };
 
   const updateUser = (updates: Partial<User>) => {
-  setUser((prevUser) => {
-    if (!prevUser) return updates as User;
-    return { ...prevUser, ...updates };
-  });
-};
+    setUser((prevUser) => {
+      if (!prevUser) return updates as User;
+      return { ...prevUser, ...updates };
+    });
+  };
 
   return (
     <AuthContext.Provider
@@ -202,8 +153,7 @@ export const AuthProvider = ({
         user,
         isLoading,
         isAuthenticated: !!user,
-        isVerified:
-          user?.verified ?? false,
+        isVerified: user?.verified ?? false,
         hasSeenOnboarding,
         login,
         logout,
@@ -218,14 +168,9 @@ export const AuthProvider = ({
 };
 
 export const useAuth = () => {
-  const context =
-    useContext(AuthContext);
-
+  const context = useContext(AuthContext);
   if (!context) {
-    throw new Error(
-      'useAuth must be used within AuthProvider'
-    );
+    throw new Error('useAuth must be used within AuthProvider');
   }
-
   return context;
 };

@@ -12,10 +12,11 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import * as DocumentPicker from 'expo-document-picker';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { ProfileStackParamList } from '../../navigation/ProfileStack';
-import { workerService, Certification } from '../../services/workerService';
+import { workerService } from '../../services/workerService';
 
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'ManageCredentials'>;
@@ -77,11 +78,14 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
     },
   ]);
 
-  // Modal state
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
-  const [documentUrl, setDocumentUrl] = useState('');
   const [expiryDate, setExpiryDate] = useState('');
+  const [pickedFile, setPickedFile] = useState<{
+    uri: string;
+    name: string;
+    mimeType: string;
+  } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
 
   const getStatusConfig = (status: string) => {
@@ -119,39 +123,52 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
 
   const handleOpenUploadModal = (doc: Document) => {
     setSelectedDoc(doc);
-    setDocumentUrl('');
     setExpiryDate('');
+    setPickedFile(null);
     setModalVisible(true);
   };
 
+  const handlePickFile = async () => {
+    try {
+      const result = await DocumentPicker.getDocumentAsync({
+        type: ['application/pdf', 'image/jpeg', 'image/png'],
+        copyToCacheDirectory: true,
+      });
+
+      if (result.canceled) return;
+
+      const asset = result.assets[0];
+      setPickedFile({
+        uri: asset.uri,
+        name: asset.name,
+        mimeType: asset.mimeType || 'application/pdf',
+      });
+    } catch (error) {
+      Alert.alert('Error', 'Failed to pick file. Please try again.');
+    }
+  };
+
   const handleSubmitDocument = async () => {
-    if (!documentUrl || !expiryDate) {
-      Alert.alert('Error', 'Please fill in all fields');
+    if (!pickedFile) {
+      Alert.alert('Error', 'Please select a file to upload');
+      return;
+    }
+    if (!expiryDate) {
+      Alert.alert('Error', 'Please enter the expiry date');
       return;
     }
     if (!selectedDoc) return;
 
     setIsSubmitting(true);
     try {
-      // Get all currently uploaded docs
-      const existingCerts: Certification[] = documents
-        .filter((d) => d.status === 'pending' || d.status === 'approved')
-        .map((d) => ({
-          documentName: d.certKey,
-          documentUrl: 'https://mock-url.com/doc.pdf',
-          expiryDate: expiryDate,
-        }));
+      await workerService.uploadCredentials([
+        {
+          uri: pickedFile.uri,
+          fileName: pickedFile.name,
+          mimeType: pickedFile.mimeType,
+        },
+      ]);
 
-      // Add the new one
-      const newCert: Certification = {
-        documentName: selectedDoc.certKey,
-        documentUrl: documentUrl,
-        expiryDate: expiryDate,
-      };
-
-      await workerService.uploadCredentials([...existingCerts, newCert]);
-
-      // Update UI
       setDocuments((prev) =>
         prev.map((doc) =>
           doc.id === selectedDoc.id
@@ -166,10 +183,7 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
       );
 
       setModalVisible(false);
-      Alert.alert(
-        'Submitted! ✅',
-        'Your document has been submitted for admin review.'
-      );
+      Alert.alert('Submitted! ✅', 'Your document has been submitted for admin review.');
     } catch (error: any) {
       Alert.alert(
         'Error',
@@ -188,10 +202,7 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
     <View style={styles.container}>
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.goBack()}
-        >
+        <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={styles.headerTitle}>My Credentials</Text>
@@ -227,14 +238,9 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
 
         {/* Info Card */}
         <View style={styles.infoCard}>
-          <Ionicons
-            name="information-circle-outline"
-            size={18}
-            color={colors.primary}
-          />
+          <Ionicons name="information-circle-outline" size={18} color={colors.primary} />
           <Text style={styles.infoText}>
-            Share your document links below. Upload documents to Google Drive
-            or Dropbox and paste the link here.
+            Upload your documents directly from your phone. Supported formats: PDF, JPG, PNG.
           </Text>
         </View>
 
@@ -245,12 +251,7 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
           return (
             <View key={doc.id} style={styles.documentCard}>
               <View style={styles.documentHeader}>
-                <View
-                  style={[
-                    styles.documentIconContainer,
-                    { backgroundColor: config.bg },
-                  ]}
-                >
+                <View style={[styles.documentIconContainer, { backgroundColor: config.bg }]}>
                   <Ionicons
                     name={
                       doc.status === 'approved' || doc.status === 'pending'
@@ -264,45 +265,27 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
                 <View style={styles.documentInfo}>
                   <View style={styles.documentTitleRow}>
                     <Text style={styles.documentTitle}>{doc.title}</Text>
-                    <View
-                      style={[
-                        styles.statusBadge,
-                        { backgroundColor: config.bg },
-                      ]}
-                    >
-                      <Text
-                        style={[styles.statusText, { color: config.color }]}
-                      >
+                    <View style={[styles.statusBadge, { backgroundColor: config.bg }]}>
+                      <Text style={[styles.statusText, { color: config.color }]}>
                         {config.label}
                       </Text>
                     </View>
                   </View>
                   <Text style={styles.documentSubtitle}>{doc.subtitle}</Text>
                   {doc.uploadedAt && (
-                    <Text style={styles.uploadedDate}>
-                      Submitted: {doc.uploadedAt}
-                    </Text>
+                    <Text style={styles.uploadedDate}>Submitted: {doc.uploadedAt}</Text>
                   )}
                 </View>
               </View>
 
-              {/* Rejection Reason */}
               {doc.status === 'rejected' && doc.rejectionReason && (
                 <View style={styles.rejectionCard}>
-                  <Ionicons
-                    name="alert-circle-outline"
-                    size={16}
-                    color={colors.error}
-                  />
-                  <Text style={styles.rejectionText}>
-                    {doc.rejectionReason}
-                  </Text>
+                  <Ionicons name="alert-circle-outline" size={16} color={colors.error} />
+                  <Text style={styles.rejectionText}>{doc.rejectionReason}</Text>
                 </View>
               )}
 
-              {/* Upload/Reupload Button */}
-              {(doc.status === 'rejected' ||
-                doc.status === 'not_uploaded') && (
+              {(doc.status === 'rejected' || doc.status === 'not_uploaded') && (
                 <TouchableOpacity
                   style={[
                     styles.uploadButton,
@@ -314,9 +297,7 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
                   <Ionicons
                     name="cloud-upload-outline"
                     size={16}
-                    color={
-                      doc.status === 'rejected' ? colors.white : colors.primary
-                    }
+                    color={doc.status === 'rejected' ? colors.white : colors.primary}
                   />
                   <Text
                     style={[
@@ -324,28 +305,13 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
                       doc.status === 'rejected' && styles.reuploadButtonText,
                     ]}
                   >
-                    {doc.status === 'rejected'
-                      ? 'Re-upload Document'
-                      : 'Upload Document'}
+                    {doc.status === 'rejected' ? 'Re-upload Document' : 'Upload Document'}
                   </Text>
                 </TouchableOpacity>
               )}
             </View>
           );
         })}
-
-        {/* Accepted Formats */}
-        <View style={styles.formatsCard}>
-          <Ionicons
-            name="information-circle-outline"
-            size={16}
-            color={colors.textSecondary}
-          />
-          <Text style={styles.formatsText}>
-            Share document links from Google Drive, Dropbox or any cloud
-            storage. Make sure the link is publicly accessible.
-          </Text>
-        </View>
 
         <View style={{ height: 40 }} />
       </ScrollView>
@@ -360,9 +326,7 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>
             <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>
-                Upload {selectedDoc?.title}
-              </Text>
+              <Text style={styles.modalTitle}>Upload {selectedDoc?.title}</Text>
               <TouchableOpacity onPress={() => setModalVisible(false)}>
                 <Ionicons name="close" size={24} color={colors.textPrimary} />
               </TouchableOpacity>
@@ -370,21 +334,31 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
 
             <Text style={styles.modalSubtitle}>{selectedDoc?.subtitle}</Text>
 
-            {/* Document URL */}
+            {/* File Picker */}
             <View style={styles.inputGroup}>
-              <Text style={styles.label}>Document URL</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="https://drive.google.com/your-document"
-                placeholderTextColor={colors.textMuted}
-                value={documentUrl}
-                onChangeText={setDocumentUrl}
-                autoCapitalize="none"
-                keyboardType="url"
-              />
-              <Text style={styles.inputHint}>
-                Upload to Google Drive or Dropbox and paste the link here
-              </Text>
+              <Text style={styles.label}>Document File</Text>
+              <TouchableOpacity style={styles.filePicker} onPress={handlePickFile}>
+                <Ionicons
+                  name={pickedFile ? 'document' : 'cloud-upload-outline'}
+                  size={22}
+                  color={pickedFile ? colors.primary : colors.textMuted}
+                />
+                <Text
+                  style={[
+                    styles.filePickerText,
+                    pickedFile && styles.filePickerTextSelected,
+                  ]}
+                  numberOfLines={1}
+                >
+                  {pickedFile ? pickedFile.name : 'Tap to select a file'}
+                </Text>
+                {pickedFile && (
+                  <TouchableOpacity onPress={() => setPickedFile(null)}>
+                    <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+                  </TouchableOpacity>
+                )}
+              </TouchableOpacity>
+              <Text style={styles.inputHint}>Supported formats: PDF, JPG, PNG</Text>
             </View>
 
             {/* Expiry Date */}
@@ -400,12 +374,8 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
               />
             </View>
 
-            {/* Submit */}
             <TouchableOpacity
-              style={[
-                styles.submitButton,
-                isSubmitting && styles.buttonDisabled,
-              ]}
+              style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
               onPress={handleSubmitDocument}
               disabled={isSubmitting}
               activeOpacity={0.85}
@@ -417,10 +387,7 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
               )}
             </TouchableOpacity>
 
-            <TouchableOpacity
-              style={styles.cancelButton}
-              onPress={() => setModalVisible(false)}
-            >
+            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
               <Text style={styles.cancelButtonText}>Cancel</Text>
             </TouchableOpacity>
           </View>
@@ -457,6 +424,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
+    paddingBottom: 50,
   },
   summaryCard: {
     backgroundColor: colors.primary,
@@ -622,21 +590,6 @@ const styles = StyleSheet.create({
   reuploadButtonText: {
     color: colors.white,
   },
-  formatsCard: {
-    flexDirection: 'row',
-    alignItems: 'flex-start',
-    gap: 8,
-    backgroundColor: colors.inputBackground,
-    borderRadius: 12,
-    padding: 14,
-    marginTop: 8,
-  },
-  formatsText: {
-    flex: 1,
-    fontSize: typography.sm,
-    color: colors.textSecondary,
-    lineHeight: 20,
-  },
   modalOverlay: {
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.5)',
@@ -682,6 +635,27 @@ const styles = StyleSheet.create({
     height: 52,
     fontSize: typography.md,
     color: colors.textPrimary,
+  },
+  filePicker: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+    backgroundColor: colors.background,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: colors.border,
+    borderStyle: 'dashed',
+    paddingHorizontal: 14,
+    height: 56,
+  },
+  filePickerText: {
+    flex: 1,
+    fontSize: typography.sm,
+    color: colors.textMuted,
+  },
+  filePickerTextSelected: {
+    color: colors.textPrimary,
+    fontFamily: typography.medium,
   },
   inputHint: {
     fontSize: typography.xs,

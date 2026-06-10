@@ -13,7 +13,8 @@ export type AuthStackParamList = {
   Login: undefined;
   Signup: undefined;
   ForgotPassword: undefined;
-  OTPVerification: { email: string };
+  OTPVerification: { email: string; type: 'signup' | 'forgot-password' };
+  ResetPassword: undefined;
 };
 
 const Stack = createNativeStackNavigator<AuthStackParamList>();
@@ -27,6 +28,7 @@ const AuthStack = () => {
       <Stack.Screen name="Signup" component={SignupScreen} />
       <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
       <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
+      {/* <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} /> */}
     </Stack.Navigator>
   );
 };
