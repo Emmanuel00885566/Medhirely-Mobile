@@ -76,7 +76,7 @@ const WithdrawEarningsScreen = ({ navigation }: Props) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
-        style={{ flex: 1 }}
+        
       >
         {/* Available Balance Card */}
         <View style={styles.balanceCard}>
