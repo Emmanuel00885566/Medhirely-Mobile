@@ -225,25 +225,26 @@ const ShiftsScreen = () => {
       activeOpacity={0.85}
     >
       {/* Card Top Row */}
-      <View style={styles.cardTopRow}>
-        <View style={styles.cardTitleContainer}>
-          <Text style={styles.shiftTitle}>{item.title}</Text>
-          <Text style={styles.appliedText}>{item.applied} applied</Text>
-        </View>
-        <TouchableOpacity
-          style={styles.bookmarkButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            toggleBookmark(item.id);
-          }}
-        >
-          <Ionicons
-            name={bookmarked.includes(item.id) ? 'bookmark' : 'bookmark-outline'}
-            size={20}
-            color={bookmarked.includes(item.id) ? colors.primary : colors.textMuted}
-          />
-        </TouchableOpacity>
-      </View>
+<View style={styles.cardTopRow}>
+  <Text style={styles.shiftTitle} numberOfLines={1}>{item.title}</Text>
+  <TouchableOpacity
+    style={styles.bookmarkButton}
+    onPress={(e) => {
+      e.stopPropagation();
+      toggleBookmark(item.id);
+    }}
+  >
+    <Ionicons
+      name={bookmarked.includes(item.id) ? 'bookmark' : 'bookmark-outline'}
+      size={20}
+      color={bookmarked.includes(item.id) ? colors.primary : colors.textMuted}
+    />
+  </TouchableOpacity>
+</View>
+
+{/* Applied text moved below title */}
+<Text style={styles.appliedText}>{item.applied} applied</Text>
+
 
       {/* Pay */}
       <Text style={styles.payText}>
@@ -280,30 +281,32 @@ const ShiftsScreen = () => {
       <View style={styles.cardDivider} />
 
       {/* Facility Row */}
-      <View style={styles.facilityRow}>
-        <View style={styles.facilityLeft}>
-          <Text style={styles.facilityName}>{item.facility}</Text>
-          {item.facilityVerified && (
-            <Image
-              source={require('../../assets/verified.png')}
-              style={styles.verifiedIcon}
-            />
-          )}
-        </View>
-        <TouchableOpacity
-          style={styles.applyButton}
-          onPress={(e) => {
-            e.stopPropagation();
-            navigation.navigate('ShiftDetail', {
-              shiftId: item.id,
-              shiftData: JSON.stringify(item)
-            });
-          }}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.applyButtonText}>Apply</Text>
-        </TouchableOpacity>
-      </View>
+<View style={styles.facilityRow}>
+  <View style={styles.facilityLeft}>
+    <View style={styles.facilityNameRow}>
+      <Text style={styles.facilityName}>{item.facility}</Text>
+      {item.facilityVerified && (
+        <Image
+          source={require('../../assets/verified.png')}
+          style={styles.verifiedIcon}
+        />
+      )}
+    </View>
+  </View>
+  <TouchableOpacity
+    style={styles.applyButton}
+    onPress={(e) => {
+      e.stopPropagation();
+      navigation.navigate('ShiftDetail', {
+        shiftId: item.id,
+        shiftData: JSON.stringify(item),
+      });
+    }}
+    activeOpacity={0.85}
+  >
+    <Text style={styles.applyButtonText}>Apply</Text>
+  </TouchableOpacity>
+</View>
 
       {/* Rating Row */}
       <View style={styles.ratingRow}>
@@ -575,23 +578,26 @@ const styles = StyleSheet.create({
   cardTopRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'center',
     marginBottom: 4,
   },
-  cardTitleContainer: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 8,
-    flex: 1,
-  },
+  // cardTitleContainer: {
+  //   flexDirection: 'row',
+  //   alignItems: 'center',
+  //   gap: 8,
+  //   flex: 1,
+  // },
   shiftTitle: {
     fontSize: typography.lg,
     fontFamily: typography.bold,
     color: colors.textPrimary,
+    flex: 1,
+    marginRight: 8,
   },
   appliedText: {
     fontSize: typography.sm,
     color: colors.textMuted,
+    marginBottom: 8,
   },
   bookmarkButton: {
     width: 36,
@@ -675,21 +681,27 @@ const styles = StyleSheet.create({
     marginBottom: 6,
   },
   facilityLeft: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: 6,
-    flex: 1,
-  },
-  facilityName: {
-    fontSize: typography.md,
-    fontFamily: typography.semiBold,
-    color: colors.textPrimary,
-    flex: 1,
-  },
-  verifiedIcon: {
-    width: 40,
-    height: 40,
-  },
+  flex: 1,
+  marginRight: 8,
+},
+
+facilityNameRow: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  gap: 6,
+},
+
+facilityName: {
+  fontSize: typography.md,
+  fontFamily: typography.semiBold,
+  color: colors.textPrimary,
+  flexShrink: 1, // ← allows text to shrink if name is long
+},
+
+verifiedIcon: {
+  width: 18,
+  height: 18, // ← down from 40x40
+},
   applyButton: {
     backgroundColor: colors.primary,
     borderRadius: 20,

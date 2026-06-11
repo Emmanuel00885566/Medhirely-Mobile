@@ -9,6 +9,8 @@ import {
   TextInput,
   ActivityIndicator,
   Modal,
+  KeyboardAvoidingView, 
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -17,6 +19,7 @@ import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { ProfileStackParamList } from '../../navigation/ProfileStack';
 import { workerService } from '../../services/workerService';
+
 
 type Props = {
   navigation: NativeStackNavigationProp<ProfileStackParamList, 'ManageCredentials'>;
@@ -316,83 +319,81 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
         <View style={{ height: 40 }} />
       </ScrollView>
 
-      {/* Upload Modal */}
-      <Modal
-        visible={modalVisible}
-        transparent
-        animationType="slide"
-        onRequestClose={() => setModalVisible(false)}
-      >
-        <View style={styles.modalOverlay}>
-          <View style={styles.modalContent}>
-            <View style={styles.modalHeader}>
-              <Text style={styles.modalTitle}>Upload {selectedDoc?.title}</Text>
-              <TouchableOpacity onPress={() => setModalVisible(false)}>
-                <Ionicons name="close" size={24} color={colors.textPrimary} />
-              </TouchableOpacity>
-            </View>
-
-            <Text style={styles.modalSubtitle}>{selectedDoc?.subtitle}</Text>
-
-            {/* File Picker */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Document File</Text>
-              <TouchableOpacity style={styles.filePicker} onPress={handlePickFile}>
-                <Ionicons
-                  name={pickedFile ? 'document' : 'cloud-upload-outline'}
-                  size={22}
-                  color={pickedFile ? colors.primary : colors.textMuted}
-                />
-                <Text
-                  style={[
-                    styles.filePickerText,
-                    pickedFile && styles.filePickerTextSelected,
-                  ]}
-                  numberOfLines={1}
-                >
-                  {pickedFile ? pickedFile.name : 'Tap to select a file'}
-                </Text>
-                {pickedFile && (
-                  <TouchableOpacity onPress={() => setPickedFile(null)}>
-                    <Ionicons name="close-circle" size={18} color={colors.textMuted} />
-                  </TouchableOpacity>
-                )}
-              </TouchableOpacity>
-              <Text style={styles.inputHint}>Supported formats: PDF, JPG, PNG</Text>
-            </View>
-
-            {/* Expiry Date */}
-            <View style={styles.inputGroup}>
-              <Text style={styles.label}>Expiry Date</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="YYYY-MM-DD"
-                placeholderTextColor={colors.textMuted}
-                value={expiryDate}
-                onChangeText={setExpiryDate}
-                keyboardType="numeric"
-              />
-            </View>
-
-            <TouchableOpacity
-              style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
-              onPress={handleSubmitDocument}
-              disabled={isSubmitting}
-              activeOpacity={0.85}
-            >
-              {isSubmitting ? (
-                <ActivityIndicator color={colors.white} />
-              ) : (
-                <Text style={styles.submitButtonText}>Submit Document</Text>
-              )}
-            </TouchableOpacity>
-
-            <TouchableOpacity style={styles.cancelButton} onPress={() => setModalVisible(false)}>
-              <Text style={styles.cancelButtonText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
+ {/* Upload Modal */}
+<Modal
+  visible={modalVisible}
+  transparent
+  animationType="slide"
+  onRequestClose={() => setModalVisible(false)}
+>
+  <KeyboardAvoidingView
+    behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+    style={styles.modalOverlay}
+  >
+    <ScrollView
+      contentContainerStyle={{ flexGrow: 1, justifyContent: 'flex-end' }}
+      keyboardShouldPersistTaps="handled"
+    >
+      <View style={styles.modalContent}>
+        <View style={styles.modalHeader}>
+          <Text style={styles.modalTitle}>Upload {selectedDoc?.title}</Text>
+          <TouchableOpacity onPress={() => setModalVisible(false)}>
+            <Ionicons name="close" size={24} color={colors.textPrimary} />
+          </TouchableOpacity>
         </View>
-      </Modal>
+
+        <Text style={styles.modalSubtitle}>{selectedDoc?.subtitle}</Text>
+
+        {/* File Picker */}
+        <View style={styles.inputGroup}>
+          <Text style={styles.label}>Document File</Text>
+          <TouchableOpacity style={styles.filePicker} onPress={handlePickFile}>
+            <Ionicons
+              name={pickedFile ? 'document' : 'cloud-upload-outline'}
+              size={22}
+              color={pickedFile ? colors.primary : colors.textMuted}
+            />
+            <Text
+              style={[
+                styles.filePickerText,
+                pickedFile && styles.filePickerTextSelected,
+              ]}
+              numberOfLines={1}
+            >
+              {pickedFile ? pickedFile.name : 'Tap to select a file'}
+            </Text>
+            {pickedFile && (
+              <TouchableOpacity onPress={() => setPickedFile(null)}>
+                <Ionicons name="close-circle" size={18} color={colors.textMuted} />
+              </TouchableOpacity>
+            )}
+          </TouchableOpacity>
+          <Text style={styles.inputHint}>Supported formats: PDF, JPG, PNG</Text>
+        </View>
+
+        <TouchableOpacity
+          style={[styles.submitButton, isSubmitting && styles.buttonDisabled]}
+          onPress={handleSubmitDocument}
+          disabled={isSubmitting}
+          activeOpacity={0.85}
+        >
+          {isSubmitting ? (
+            <ActivityIndicator color={colors.white} />
+          ) : (
+            <Text style={styles.submitButtonText}>Submit Document</Text>
+          )}
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={styles.cancelButton}
+          onPress={() => setModalVisible(false)}
+        >
+          <Text style={styles.cancelButtonText}>Cancel</Text>
+        </TouchableOpacity>
+      </View>
+    </ScrollView>
+  </KeyboardAvoidingView>
+</Modal>
     </View>
   );
 };

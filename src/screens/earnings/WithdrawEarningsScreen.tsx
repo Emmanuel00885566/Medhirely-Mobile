@@ -76,6 +76,7 @@ const WithdrawEarningsScreen = ({ navigation }: Props) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         keyboardShouldPersistTaps="handled"
+        style={{ flex: 1 }}
       >
         {/* Available Balance Card */}
         <View style={styles.balanceCard}>
@@ -202,7 +203,8 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingTop: 8,
+    paddingTop: 12,
+    paddingBottom: 12,
   },
   balanceCard: {
     backgroundColor: colors.primaryLight,

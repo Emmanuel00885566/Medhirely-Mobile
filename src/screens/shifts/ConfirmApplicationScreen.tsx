@@ -93,15 +93,19 @@ const ConfirmApplicationScreen = ({ navigation, route }: Props) => {
 
   // ✅ Success State
   if (isSuccess) {
-    return (
-      <View style={styles.successContainer}>
-        <TouchableOpacity
-          style={styles.backButton}
-          onPress={() => navigation.navigate('ShiftsFeed')}
-        >
-          <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
-        </TouchableOpacity>
+  return (
+    <View style={styles.successContainer}>
+      <TouchableOpacity
+        style={styles.backButton}
+        onPress={() => navigation.navigate('ShiftsFeed')}
+      >
+        <Ionicons name="arrow-back" size={22} color={colors.textPrimary} />
+      </TouchableOpacity>
 
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.successScrollContent}
+      >
         <View style={styles.successContent}>
           <Animated.View style={[
             styles.successIconContainer,
@@ -159,13 +163,16 @@ const ConfirmApplicationScreen = ({ navigation, route }: Props) => {
             style={styles.trackButton}
             onPress={() => navigation.getParent()?.navigate('Applications')}
             activeOpacity={0.85}
->
+          >
             <Text style={styles.trackButtonText}>Track Application</Text>
           </TouchableOpacity>
+
+          <View style={{ height: 40 }} />
         </View>
-      </View>
-    );
-  }
+      </ScrollView>
+    </View>
+  );
+}
 
   // Payment breakdown
   const basePay = shift?.payPerShift || 0;
@@ -384,7 +391,7 @@ const styles = StyleSheet.create({
   buttonDisabled: { opacity: 0.7 },
   applyButtonText: { fontSize: typography.md, fontFamily: typography.bold, color: colors.white, letterSpacing: 0.5 },
   successContainer: { flex: 1, backgroundColor: colors.background, paddingHorizontal: 24, paddingTop: 60 },
-  successContent: { flex: 1, alignItems: 'center', paddingTop: 20 },
+  successContent: { alignItems: 'center', paddingTop: 20, paddingBottom: 40 },
   successIconContainer: { marginBottom: 24 },
   successIconBg: { width: 120, height: 120, borderRadius: 60, backgroundColor: colors.secondaryLight, justifyContent: 'center', alignItems: 'center' },
   successTitle: { fontSize: typography.xxl, fontFamily: typography.bold, color: colors.textPrimary, marginBottom: 12, textAlign: 'center' },
@@ -400,6 +407,9 @@ const styles = StyleSheet.create({
   doneButtonText: { fontSize: typography.md, fontFamily: typography.bold, color: colors.white },
   trackButton: { width: '100%', height: 54, justifyContent: 'center', alignItems: 'center', borderRadius: 12, borderWidth: 1.5, borderColor: colors.primary },
   trackButtonText: { fontSize: typography.md, fontFamily: typography.bold, color: colors.primary },
+  successScrollContent: {
+  flexGrow: 1,
+},
 });
 
 export default ConfirmApplicationScreen;

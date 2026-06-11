@@ -88,6 +88,7 @@ const EarningsScreen = () => {
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
+        style={{ flex: 1 }}
       >
         {/* Total Earnings Card */}
         <View style={styles.totalCard}>
@@ -314,6 +315,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
+      paddingBottom: 12,
   },
   totalCard: {
     backgroundColor: colors.white,
