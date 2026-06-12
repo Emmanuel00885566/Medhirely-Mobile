@@ -83,7 +83,6 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
 
   const [modalVisible, setModalVisible] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState<Document | null>(null);
-  const [expiryDate, setExpiryDate] = useState('');
   const [pickedFile, setPickedFile] = useState<{
     uri: string;
     name: string;
@@ -126,7 +125,6 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
 
   const handleOpenUploadModal = (doc: Document) => {
     setSelectedDoc(doc);
-    setExpiryDate('');
     setPickedFile(null);
     setModalVisible(true);
   };
@@ -156,10 +154,7 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
       Alert.alert('Error', 'Please select a file to upload');
       return;
     }
-    if (!expiryDate) {
-      Alert.alert('Error', 'Please enter the expiry date');
-      return;
-    }
+    
     if (!selectedDoc) return;
 
     setIsSubmitting(true);

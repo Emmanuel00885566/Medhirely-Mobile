@@ -128,7 +128,7 @@ const MOCK_SHIFTS = [
   },
 ];
 
-const USE_MOCK = false; // ← flip to false once backend endpoint is ready
+const USE_MOCK = false;
 
 export const shiftsService = {
   // ✅ GET all shifts

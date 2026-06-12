@@ -67,15 +67,19 @@ const ApplicationsScreen = () => {
   if (!selectedApp) return;
   setIsWithdrawing(true);
   try {
-    await applicationsService.withdrawApplication(selectedApp.id);
-    // ✅ Remove from list immediately without refetching
+    await applicationsService.withdrawApplication(selectedApp.id || '');
+    // Remove from list immediately
     setApplications((prev) =>
       prev.filter((app) => app.id !== selectedApp.id)
     );
     setWithdrawModal(false);
     Alert.alert('Success', 'Application withdrawn successfully');
-  } catch (error) {
-    Alert.alert('Error', 'Failed to withdraw application');
+  } catch (error: any) {
+    console.log('Withdraw error:', error?.response?.data);
+    Alert.alert(
+      'Error',
+      error?.response?.data?.message || 'Failed to withdraw application'
+    );
   } finally {
     setIsWithdrawing(false);
   }
