@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Image,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -14,6 +15,7 @@ import { RouteProp } from '@react-navigation/native';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { shiftsService } from '../../services/shifts';
+import { useAuth } from '../../context/AuthContext';
 import { ShiftsStackParamList } from '../../navigation/ShiftsStack';
 
 type Props = {
@@ -26,6 +28,7 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
   const parsedShift = shiftData ? JSON.parse(shiftData) : null;
   const [shift, setShift] = useState<any>(parsedShift || null);
   const [isLoading, setIsLoading] = useState(!parsedShift);
+  const { user } = useAuth();
 
   useEffect(() => {
     if (parsedShift) return;
@@ -223,13 +226,26 @@ const ShiftDetailScreen = ({ navigation, route }: Props) => {
 
       {/* Bottom Apply Button */}
       <View style={styles.bottomContainer}>
-        <TouchableOpacity
-          style={styles.applyButton}
-          onPress={handleApply}
-          activeOpacity={0.85}
-        >
-          <Text style={styles.applyButtonText}>Apply for this Shift</Text>
-        </TouchableOpacity>
+       <TouchableOpacity
+  style={[
+    styles.applyButton,
+    !user?.verified && styles.applyButtonDisabled
+  ]}
+  onPress={() => {
+    if (!user?.verified) {
+      Alert.alert(
+        'Verification Required',
+        'You need to be verified before you can apply for shifts. Please complete your credentials under Profile.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    handleApply();
+  }}
+  activeOpacity={0.85}
+>
+  <Text style={styles.applyButtonText}>Apply for this Shift</Text>
+</TouchableOpacity>
       </View>
     </View>
   );
@@ -475,6 +491,12 @@ const styles = StyleSheet.create({
     color: colors.white,
     letterSpacing: 0.5,
   },
+
+  applyButtonDisabled: {
+  backgroundColor: colors.textMuted,
+  opacity: 0.6,
+},
+
 });
 
 export default ShiftDetailScreen;

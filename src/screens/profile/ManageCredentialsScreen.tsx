@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,12 +13,13 @@ import {
   Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { NativeStackNavigationProp } from '@react-navigation/native-stack';
+import { NativeStackNavigationProp,  } from '@react-navigation/native-stack';
 import * as DocumentPicker from 'expo-document-picker';
 import { colors } from '../../theme/colors';
 import { typography } from '../../theme/typography';
 import { ProfileStackParamList } from '../../navigation/ProfileStack';
 import { workerService } from '../../services/workerService';
+import { useFocusEffect } from '@react-navigation/native';
 
 
 type Props = {
@@ -89,6 +90,53 @@ const ManageCredentialsScreen = ({ navigation }: Props) => {
     mimeType: string;
   } | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  useFocusEffect(
+  useCallback(() => {
+    const loadCertifications = async () => {
+      try {
+        const profile = await workerService.getProfile();
+        const certs = profile?.certifications || [];
+        const verificationStatus = profile?.verificationStatus || 'Pending';
+        const rejectionReason = profile?.rejectionReason || '';
+
+        console.log('Certifications:', JSON.stringify(certs, null, 2));
+        console.log('Verification status:', verificationStatus);
+
+        if (certs.length > 0) {
+          setDocuments((prev) =>
+            prev.map((doc, index) => {
+              const matchingCert = certs[index];
+              if (matchingCert) {
+                const status =
+                  verificationStatus === 'Approved'
+                    ? 'approved'
+                    : verificationStatus === 'Rejected'
+                    ? 'rejected'
+                    : 'pending';
+
+                return {
+                  ...doc,
+                  status: status as any,
+                  rejectionReason:
+                    verificationStatus === 'Rejected' ? rejectionReason : undefined,
+                  uploadedAt: new Date(
+                    parseInt(matchingCert._id.substring(0, 8), 16) * 1000
+                  ).toISOString().split('T')[0],
+                };
+              }
+              return doc;
+            })
+          );
+        }
+      } catch (error) {
+        console.log('Error loading certifications:', error);
+      }
+    };
+    loadCertifications();
+  }, [])
+);
+
 
   const getStatusConfig = (status: string) => {
     switch (status) {

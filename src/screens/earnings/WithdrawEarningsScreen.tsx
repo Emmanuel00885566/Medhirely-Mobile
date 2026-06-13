@@ -170,7 +170,7 @@ const WithdrawEarningsScreen = ({ navigation }: Props) => {
           </Text>
         </View>
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 120 }} />
       </ScrollView>
     </View>
   );
@@ -204,7 +204,7 @@ const styles = StyleSheet.create({
   content: {
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 12,
+    paddingBottom: 120,
   },
   balanceCard: {
     backgroundColor: colors.primaryLight,

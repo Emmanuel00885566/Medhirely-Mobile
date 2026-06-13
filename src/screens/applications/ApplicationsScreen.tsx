@@ -380,7 +380,7 @@ const styles = StyleSheet.create({
   },
   listContainer: {
     paddingHorizontal: 16,
-    paddingBottom: 100,
+    paddingBottom: 120,
   },
   card: {
     backgroundColor: colors.white,
@@ -514,6 +514,7 @@ const styles = StyleSheet.create({
     borderTopLeftRadius: 24,
     borderTopRightRadius: 24,
     padding: 24,
+    paddingBottom: 40,
     alignItems: 'center',
   },
   modalIconContainer: {

@@ -11,6 +11,7 @@ import {
   Image,
   Modal,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useNavigation } from '@react-navigation/native';
@@ -294,18 +295,29 @@ const ShiftsScreen = () => {
     </View>
   </View>
   <TouchableOpacity
-    style={styles.applyButton}
-    onPress={(e) => {
-      e.stopPropagation();
-      navigation.navigate('ShiftDetail', {
-        shiftId: item.id,
-        shiftData: JSON.stringify(item),
-      });
-    }}
-    activeOpacity={0.85}
-  >
-    <Text style={styles.applyButtonText}>Apply</Text>
-  </TouchableOpacity>
+  style={[
+    styles.applyButton,
+    !user?.verified && styles.applyButtonDisabled
+  ]}
+  onPress={(e) => {
+    e.stopPropagation();
+    if (!user?.verified) {
+      Alert.alert(
+        'Verification Required',
+        'You need to be verified before you can apply for shifts. Please complete your credentials under Profile.',
+        [{ text: 'OK' }]
+      );
+      return;
+    }
+    navigation.navigate('ShiftDetail', {
+      shiftId: item.id,
+      shiftData: JSON.stringify(item),
+    });
+  }}
+  activeOpacity={0.85}
+>
+  <Text style={styles.applyButtonText}>Apply</Text>
+</TouchableOpacity>
 </View>
 
       {/* Rating Row */}
@@ -834,6 +846,11 @@ verifiedIcon: {
     fontFamily: typography.bold,
     color: colors.white,
   },
+  applyButtonDisabled: {
+  backgroundColor: colors.textMuted,
+  opacity: 0.6,
+},
+
 });
 
 export default ShiftsScreen;

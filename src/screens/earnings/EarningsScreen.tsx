@@ -239,7 +239,9 @@ const EarningsScreen = () => {
                 </View>
                 <View>
                   <Text style={styles.transactionFacility}>
+                     <Text style={styles.transactionFacility} numberOfLines={1} ellipsizeMode="tail">
                     {item.facility}
+                    </Text>
                   </Text>
                   <Text style={styles.transactionRole}>{item.shiftTitle}</Text>
                   <Text style={styles.transactionDate}>{item.date}</Text>
@@ -315,7 +317,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-      paddingBottom: 12,
+      paddingBottom: 120,
   },
   totalCard: {
     backgroundColor: colors.white,
@@ -486,6 +488,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 12,
     flex: 1,
+    minWidth: 0,
   },
   transactionIconContainer: {
     width: 40,
@@ -512,6 +515,7 @@ const styles = StyleSheet.create({
   transactionRight: {
     alignItems: 'flex-end',
     gap: 4,
+    flexShrink: 0,
   },
   transactionAmount: {
     fontSize: typography.md,

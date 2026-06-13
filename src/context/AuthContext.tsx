@@ -24,6 +24,7 @@ type User = {
   profilePicture?: string;
   verificationStatus?: string;
   certifications?: any[];
+  rejectionReason?: string;
   availability?: any[];
 };
 
@@ -74,6 +75,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               verified: freshProfile.verificationStatus === 'Approved',
               certifications: freshProfile.certifications,
               availability: freshProfile.availability,
+              rejectionReason: freshProfile.rejectionReason || '',
             }));
           } catch (e) {
             console.log('Background profile fetch failed:', e);
@@ -112,6 +114,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         verificationStatus: profile.verificationStatus,
         certifications: profile.certifications || [],
         availability: profile.availability || [],
+        rejectionReason: profile.rejectionReason || '',
       };
 
       setUser(userData);

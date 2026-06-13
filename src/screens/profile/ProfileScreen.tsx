@@ -26,34 +26,36 @@ const ProfileScreen = () => {
   const navigation = useNavigation<NavigationProp>();
   const { user, logout, updateUser } = useAuth();
 
-//  useFocusEffect(
-//   useCallback(() => {
-//     const refreshProfile = async () => {
-//       try {
-//         const response = await workerService.getProfile();
-//         updateUser({
-//           _id: response._id,
-//           firstName: response.firstName,
-//           lastName: response.lastName,
-//           email: response.user?.email,
-//           role: response.user?.role,
-//           specialty: response.specialty,
-//           phoneNumber: response.phoneNumber,
-//           bio: response.bio,
-//           address: response.address,
-//           experienceYears: response.experienceYears,
-//           verificationStatus: response.verificationStatus,
-//           certifications: response.certifications,
-//           availability: response.availability,
-//           verified: response.verificationStatus === 'Approved',
-//         });
-//       } catch (error) {
-//         console.log('Error refreshing profile:', error);
-//       }
-//     };
-//     refreshProfile();
-//   }, [])
-// );
+ useFocusEffect(
+  useCallback(() => {
+    const refreshProfile = async () => {
+      try {
+        const response = await workerService.getProfile();
+        console.log('Full profile response:', JSON.stringify(response, null, 2));
+        updateUser({
+          _id: response._id,
+          firstName: response.firstName,
+          lastName: response.lastName,
+          email: response.user?.email,
+          role: response.user?.role,
+          specialty: response.specialty,
+          phoneNumber: response.phoneNumber,
+          bio: response.bio,
+          address: response.address,
+          experienceYears: response.experienceYears,
+          verificationStatus: response.verificationStatus,
+          certifications: response.certifications,
+          availability: response.availability,
+          rejectionReason: response.rejectionReason || '', 
+          verified: response.verificationStatus === 'Approved',
+        });
+      } catch (error) {
+        console.log('Error refreshing profile:', error);
+      }
+    };
+    refreshProfile();
+  }, [])
+);
 
   const handleLogout = () => {
     Alert.alert(
@@ -116,13 +118,13 @@ const ProfileScreen = () => {
       id: 'help',
       title: 'Help & Support',
       icon: 'help-circle-outline',
-      onPress: () => Alert.alert('Coming Soon', 'Support coming soon!'),
+      onPress: () => navigation.navigate('HelpSupport'),
     },
     {
       id: 'terms',
       title: 'Terms & Conditions',
       icon: 'document-outline',
-      onPress: () => Alert.alert('Coming Soon', 'Terms coming soon!'),
+      onPress: () => navigation.navigate('TermsConditions'),
     },
   ];
 
@@ -183,23 +185,62 @@ const ProfileScreen = () => {
         <Text style={styles.profileEmail}>
   {user?.email}
 </Text>
-          {/* Verification Badge */}
-          <View style={[
-            styles.verificationBadge,
-            { backgroundColor: user?.verified ? colors.secondaryLight : '#FFF3E0' }
-          ]}>
-            <Ionicons
-              name={user?.verified ? 'shield-checkmark' : 'time-outline'}
-              size={14}
-              color={user?.verified ? colors.success : colors.warning}
-            />
-            <Text style={[
-              styles.verificationText,
-              { color: user?.verified ? colors.success : colors.warning }
-            ]}>
-              {user?.verified ? 'Verified Professional' : 'Pending Verification'}
-            </Text>
-          </View>
+
+{/* Verification Badge */}
+<View style={[
+  styles.verificationBadge,
+  {
+    backgroundColor:
+      user?.verificationStatus === 'Approved'
+        ? colors.secondaryLight
+        : user?.verificationStatus === 'Rejected'
+        ? '#FFF0F0'
+        : '#FFF3E0',
+  }
+]}>
+  <Ionicons
+    name={
+      user?.verificationStatus === 'Approved'
+        ? 'shield-checkmark'
+        : user?.verificationStatus === 'Rejected'
+        ? 'close-circle'
+        : 'time-outline'
+    }
+    size={14}
+    color={
+      user?.verificationStatus === 'Approved'
+        ? colors.success
+        : user?.verificationStatus === 'Rejected'
+        ? colors.error
+        : colors.warning
+    }
+  />
+  <Text style={[
+    styles.verificationText,
+    {
+      color:
+        user?.verificationStatus === 'Approved'
+          ? colors.success
+          : user?.verificationStatus === 'Rejected'
+          ? colors.error
+          : colors.warning,
+    }
+  ]}>
+    {user?.verificationStatus === 'Approved'
+      ? 'Verified Professional'
+      : user?.verificationStatus === 'Rejected'
+      ? 'Verification Rejected'
+      : 'Pending Verification'}
+  </Text>
+</View>
+
+{/* Show rejection reason if rejected */}
+{user?.verificationStatus === 'Rejected' && user?.rejectionReason && (
+  <View style={styles.rejectionCard}>
+    <Ionicons name="alert-circle-outline" size={16} color={colors.error} />
+    <Text style={styles.rejectionText}>{user.rejectionReason}</Text>
+  </View>
+)}
 
           {/* Stats */}
           <View style={styles.statsRow}>
@@ -456,6 +497,26 @@ const styles = StyleSheet.create({
   height: '100%',
   borderRadius: 45,
 },
+
+rejectionCard: {
+  flexDirection: 'row',
+  alignItems: 'flex-start',
+  gap: 8,
+  backgroundColor: '#FFF0F0',
+  borderRadius: 12,
+  padding: 12,
+  marginBottom: 16,
+  borderWidth: 1,
+  borderColor: colors.error,
+  width: '100%',
+},
+rejectionText: {
+  flex: 1,
+  fontSize: typography.sm,
+  color: colors.error,
+  lineHeight: 20,
+},
+
 });
 
 export default ProfileScreen;

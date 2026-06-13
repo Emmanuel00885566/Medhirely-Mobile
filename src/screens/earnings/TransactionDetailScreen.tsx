@@ -230,7 +230,7 @@ const TransactionDetailScreen = ({ navigation, route }: Props) => {
           </View>
         )}
 
-        <View style={{ height: 40 }} />
+        <View style={{ height: 100 }} />
       </ScrollView>
     </View>
   );
@@ -268,7 +268,7 @@ const styles = StyleSheet.create({
   },
   content: {
     paddingHorizontal: 16,
-    paddingBottom: 40,
+    paddingBottom: 120,
   },
   facilityCard: {
     backgroundColor: colors.white,
